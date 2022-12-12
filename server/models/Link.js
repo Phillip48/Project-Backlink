@@ -1,69 +1,35 @@
 const { Schema, model } = require('mongoose');
 
+// Date format
 const date = new Date;
-
 let year = date.getFullYear();
 let month = date.getMonth() + 1;
 let day = date.getDate();
 let format = month + '/' + day + '/' + year;
-// Schema to create Link model
 
+// Schema to create Link model
 const linkSchema = new Schema(
     {
-        user: {
-            type: Schema.Types.ObjectId,
-            required: true,
-            ref: 'User',
-        },
-        indoorOutdoor: {
-            type: String,
-            min_length: 6,
-            max_length: 7,
-            required: true,
-        },
-        boulderingOrSportClimbing: {
+        url: {
             type: String,
             required: true,
         },
-        boulderingActualGrade: {
+        urlFrom: {
             type: String,
         },
-        boulderingFeltGrade: {
-            type: String,
-        },
-        sportClimbingActualGrade: {
-            type: String,
-        },
-        sportClimbingFeltGrade: {
-            type: String,
-        },
-        notes: {
-            type: String,
-            default: "No notes were made",
-            max_length: 800,
-        },
-        totalAttempts: {
-            type: Number,
-            required: true,
-        },
-        totalSessions: {
-            type: Number,
-            required: true,
-        },
-        sendProject: {
-            type: Boolean,
-            required: true,
-            default: false,
-        },
-        createdAt: {
+        dateFound: {
             type: String,
             default: format
         },
-        videoOrImg:
-        {
-            data: Buffer,
-            contentType: String
-        }
+        text: {
+            type: String
+        },
+        linkStatus: {
+            type: Number
+        },
+        linkFollow: {
+            type: Boolean
+        },
     },
     {
         toJSON: {

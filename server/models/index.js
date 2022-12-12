@@ -1,3 +1,3 @@
 const Link = require('./Link');
 
-module.exports = {  };
+module.exports = { Link };

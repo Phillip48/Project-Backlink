@@ -80,9 +80,3 @@ db.once('open', () => {
         console.log(`API server running on port ${PORT}!`);
     })
 })
-
-// .env
-// NODE_ENV = development
-// MONGO_URI = mongodb + srv://127.0.0.1:27017/TheClimbingWallDb
-// PORT = 3001
-// JWT_SECRET = abc123
