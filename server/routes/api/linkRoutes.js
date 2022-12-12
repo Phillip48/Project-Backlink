@@ -8,7 +8,7 @@ const {
     deleteLink
 } = require('../../controllers/linkController');
 
-// Project Routes
+// Link Routes
 router.route('/links').get(getLinks).post(createLink);
 router.route('/links/:id').get(getSingleLink).delete(deleteLink).put(updateLink);
 

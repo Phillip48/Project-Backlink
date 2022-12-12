@@ -2,7 +2,9 @@
   "name": "fullbacklinkchecker",
   "version": "1.0.0",
   "main": "server/server.js",
-  "dependencies": {},
+  "dependencies": {
+    "nodemon": "^2.0.20"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "concurrently \"npm run server \"npm run client",
