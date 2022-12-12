@@ -17,10 +17,6 @@ const linkSchema = new Schema(
         urlFrom: {
             type: String,
         },
-        dateFound: {
-            type: String,
-            default: format
-        },
         text: {
             type: String
         },
@@ -30,6 +26,13 @@ const linkSchema = new Schema(
         linkFollow: {
             type: Boolean
         },
+        dateFound: {
+            type: String,
+            default: format
+        },
+        dateLastChecked: {
+            type: String,
+        }
     },
     {
         toJSON: {

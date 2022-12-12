@@ -10,7 +10,22 @@ const fs = require("fs");
 const { parse } = require("csv-parse");
 const asyncHandler = require("express-async-handler");
 
-const CSVcrawlLink = asyncHandler(async (req, res) => {
+// Call functions needed to add to the db
+// const {
+//     getLinks,
+//     getSingleLink,
+//     createLink,
+//     updateLink,
+//     deleteLink
+// } = require('../../controllers/linkController');
+
+const CSVCrawlLink = asyncHandler(async (req, res) => {
+  // Date format
+  const date = new Date();
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  let format = month + "/" + day + "/" + year;
   // Host URL and URL Protocol
   let urlProtocol;
   let hostUrl;
@@ -166,6 +181,8 @@ const CSVcrawlLink = asyncHandler(async (req, res) => {
       done();
     },
   });
+  // Check DB to see if the links in the array are in there. If its not create the link in the array.
+
   startsCrawler();
 });
 // Converts incomplete links to make them hav its domain if it doens't already
@@ -389,6 +406,7 @@ const proxyGenerator = () => {
   });
 };
 
+// Determines if you use the proxyGenerator or the normal crawler
 const startsCrawler = async () => {
   if (runProxyBoolean == true) {
     proxyGenerator();
@@ -402,5 +420,5 @@ const startsCrawler = async () => {
 };
 
 module.exports = {
-  CSVcrawlLink,
+  CSVCrawlLink,
 };
