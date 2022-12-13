@@ -26,6 +26,8 @@ const fetchRateLimiting = 500; // Rate limiting on the status code fetch in mill
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
 let fileName;
+// Array for links read from the CSV
+const csvLinks = [];
 // Arrays for the links and status resposne
 let crawledLinks = [];
 let formattedLinks = [];
@@ -42,8 +44,6 @@ let format = month + "/" + day + "/" + year;
 
 // ===================================================================================== //
 const upload = async (req, res) => {
-  // Array for links read from the CSV
-  const csvLinks = [];
   try {
     await uploadFile(req, res);
     fileName = req.file;
@@ -51,8 +51,19 @@ const upload = async (req, res) => {
     if (req.file == undefined) {
       return res.status(400).send({ message: "Please upload a file!" });
     }
-    console.log('filename after await', req.file.originalname);
-    fs.createReadStream(__basedir + `/resources/static/assets/uploads/${req.file.originalname}`)
+    // rename file so it's always the same
+    fs.rename(
+      `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
+      `${__basedir}/resources/static/assets/uploads/crawlcsv.csv`,
+      (err) => {
+        if (err) throw err;
+        console.log("\nFile Renamed!\n");
+      }
+    );
+    // Read the csv file and get the links
+    fs.createReadStream(
+      __basedir + `/resources/static/assets/uploads/crawlcsv.csv`
+    )
       .pipe(parse({ delimiter: ",", from_line: 2 }))
       .on("data", function (row) {
         firstLinks = [...row].shift();
@@ -65,19 +76,8 @@ const upload = async (req, res) => {
       .on("end", function () {
         console.log("Links from reader:", csvLinks);
         console.log("CSV scan finished");
-        //   fs.unlink(directoryPath + fileName, (err) => {
-        //     if (err) {
-        //       throw err;
-        //     }
-        //     console.log("Delete File successfully.");
-        //  });
-        //   CSVCrawlLink();
+        CSVCrawlLink();
       });
-    // fs.rename(`../resources/static/assets/uploads/${req.file.filename}`, `../resources/static/assets/uploads/csvcrawl.csv`, (err) => {
-    //     if (err) throw err;
-    //     console.log("\nFile Renamed!\n");
-    //   });
-    // readCSV()
   } catch (err) {
     res.status(500).send({
       message: `Could not upload the file: ${req.file.originalname}. ${err}`,
@@ -121,42 +121,18 @@ const download = (req, res) => {
   });
 };
 
-const readCSV = asyncHandler(async (req, res) => {
-  // Array for links read from the CSV
-  const csvLinks = [];
-  //   Code to read from csv
-  console.log("Filename", fileName);
-  fs.readFileSync(`../resources/static/assets/uploads/${fileName}`)
-    .pipe(parse({ delimiter: ",", from_line: 2 }))
-    .on("data", function (row) {
-      firstLinks = [...row].shift();
-      firstLinks.trim();
-      csvLinks.push(firstLinks);
-    })
-    .on("error", function (error) {
-      console.log(error.message);
-    })
-    .on("end", function () {
-      console.log("Links from reader:", csvLinks);
-      console.log("CSV scan finished");
-      fs.unlink(directoryPath + fileName, (err) => {
-        if (err) {
-          throw err;
-        }
-        console.log("Delete File successfully.");
-      });
-      //   CSVCrawlLink();
-    });
-});
-
 const CSVCrawlLink = asyncHandler(async (req, res) => {
+  setTimeout(async function () {
+    crawlerInstance.queue(csvLinks);
+    // }, 1500);
+  }, 1500);
   // Host URL and URL Protocol
   let urlProtocol;
   let hostUrl;
   let rawHostUrl;
   let pathURL;
   let crawlingURL;
-  let runProxyBoolean = req.params;
+  //   let runProxyBoolean = req.params;
 
   // Step 2 if used
   // Create an instance of a new crawler
@@ -278,7 +254,6 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
       done();
     },
   });
-  startsCrawler(runProxyBoolean);
 });
 // Step 3: Converts incomplete links to make them have its domain if it doens't already.
 // For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
