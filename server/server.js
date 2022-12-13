@@ -7,8 +7,6 @@ require('dotenv').config();
 
 const PORT = process.env.PORT || 3001;
 const app = express();
-
-// For cookies from old activites // refractored to be used for MERN
 // // Sets up session and connect to our Sequelize db
 // const sess = {
 //   secret: 'Super secret secret',
@@ -31,7 +29,9 @@ const app = express();
 //   }),
 // };
 
-app.use(express.urlencoded({ extended: false }));
+global.__basedir = __dirname;
+
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(routes);

@@ -8,9 +8,9 @@ const newFetch = require("fetch-retry")(fetch);
 const { performance } = require("perf_hooks");
 const fs = require("fs");
 const { parse } = require("csv-parse");
-const asyncHandler = require("express-async-handler");
-const db = require("./config/connection");
+const db = require("../config/connection");
 const DBLINK = require("../models/Link");
+const uploadFile = require("../middleware/upload");
 
 // Call functions needed to add to the db
 const {
@@ -18,7 +18,7 @@ const {
   createLink,
   updateLinkbyURL,
   updateLink,
-} = require("../../controllers/linkController");
+} = require("../controllers/linkController");
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 70; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
@@ -39,21 +39,67 @@ let month = date.getMonth() + 1;
 let day = date.getDate();
 let format = month + "/" + day + "/" + year;
 
-const CSVCrawlLink = asyncHandler(async (req, res) => {
-  // Host URL and URL Protocol
-  let urlProtocol;
-  let hostUrl;
-  let rawHostUrl;
-  let pathURL;
-  let crawlingURL;
-  let runProxyBoolean = req.params;
+// ===================================================================================== //
+const upload = async (req, res) => {
+  try {
+    await uploadFile(req, res);
+    console.log(req.file.filename);
+    if (req.file == undefined) {
+      return res.status(400).send({ message: "Please upload a file!" });
+    }
+    fs.rename(`../resources/static/assets/uploads/${req.file.filename}`, `../resources/static/assets/uploads/csvcrawl.csv`, (err) => {
+        if (err) throw err;
+        console.log("\nFile Renamed!\n");
+      });
+    // readCSV()
+  } catch (err) {
+    res.status(500).send({
+      message: `Could not upload the file: ${req.file}. ${err}`,
+    });
+  }
+};
 
-  // Step 1
+const getListFiles = (req, res) => {
+  const directoryPath = __basedir + "/resources/static/assets/uploads/";
+
+  fs.readdir(directoryPath, function (err, files) {
+    if (err) {
+      res.status(500).send({
+        message: "Unable to scan files!",
+      });
+    }
+
+    let fileInfos = [];
+
+    files.forEach((file) => {
+      fileInfos.push({
+        name: file,
+        url: baseUrl + file,
+      });
+    });
+
+    res.status(200).send(fileInfos);
+  });
+};
+
+const download = (req, res) => {
+  const fileName = req.params.name;
+  const directoryPath = __basedir + "/resources/static/assets/uploads/";
+
+  res.download(directoryPath + fileName, fileName, (err) => {
+    if (err) {
+      res.status(500).send({
+        message: "Could not download the file. " + err,
+      });
+    }
+  });
+};
+
+const readCSV = asyncHandler(async (req, res) => {
   // Array for links read from the CSV
   const csvLinks = [];
   //   Code to read from csv
-  console.log("CSV reader scanning");
-  fs.createReadStream("./CSVCRAWLERTEST.csv")
+  fs.readFileSync('../resources/static/assets/uploads/csv.csv')
     .pipe(parse({ delimiter: ",", from_line: 2 }))
     .on("data", function (row) {
       firstLinks = [...row].shift();
@@ -64,9 +110,26 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
       console.log(error.message);
     })
     .on("end", function () {
-      // console.log("Links from reader:", csvLinks);
+      console.log("Links from reader:", csvLinks);
       console.log("CSV scan finished");
+      fs.unlink(directoryPath + fileName, (err) => {
+        if (err) {
+            throw err;
+        }
+        console.log("Delete File successfully.");
     });
+    //   CSVCrawlLink();
+    });
+});
+
+const CSVCrawlLink = asyncHandler(async (req, res) => {
+  // Host URL and URL Protocol
+  let urlProtocol;
+  let hostUrl;
+  let rawHostUrl;
+  let pathURL;
+  let crawlingURL;
+  let runProxyBoolean = req.params;
 
   // Step 2 if used
   // Create an instance of a new crawler
@@ -452,4 +515,8 @@ const startsCrawler = async (runProxyBoolean) => {
 
 module.exports = {
   CSVCrawlLink,
+  //   readCSV,
+  upload,
+  getListFiles,
+  download,
 };
