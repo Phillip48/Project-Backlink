@@ -52,7 +52,7 @@ const upload = async (req, res) => {
       return res.status(400).send({ message: "Please upload a file!" });
     }
     console.log('filename after await', req.file.originalname);
-    fs.readFileSync(`../resources/static/assets/uploads/${req.file.originalname}`)
+    fs.createReadStream(__basedir + `/resources/static/assets/uploads/${req.file.originalname}`)
       .pipe(parse({ delimiter: ",", from_line: 2 }))
       .on("data", function (row) {
         firstLinks = [...row].shift();
