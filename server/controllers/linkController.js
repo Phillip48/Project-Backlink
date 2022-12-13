@@ -6,7 +6,7 @@ const asyncHandler = require("express-async-handler");
 const getLinks = asyncHandler(async (req, res) => {
   const link = await Link.find({ link: req.link });
 
-  res.status(200).json(project);
+  res.status(200).json(link);
 });
 // Get a single projects
 const getSingleLink = asyncHandler(async (req, res) => {
@@ -20,11 +20,18 @@ const getSingleLink = asyncHandler(async (req, res) => {
         : res.json(link)
     )
     .catch((err) => res.status(500).json(err));
+  res.status(200).json(link);
 });
 // create a new projects
 const createLink = asyncHandler(async (req, res) => {
   const link = await Link.create({
-    url: req.body.url,
+    urlFrom: req.body.urlFrom,
+    urlTo: req.body.urlTo,
+    text: req.body.text,
+    linkStatus: req.body.linkStatus,
+    linkFollow: req.body.linkFollow,
+    dateFound: req.body.dateFound,
+    dateLastChecked: req.body.dateLastChecked,
   });
   res.status(200).json(link);
 });
@@ -43,6 +50,7 @@ const updateLink = asyncHandler(async (req, res) => {
         : res.json(link)
     )
     .catch((err) => res.status(500).json(err));
+  res.status(200).json(link);
 });
 // Delete a projects
 const deleteLink = asyncHandler(async (req, res) => {

@@ -10,12 +10,13 @@ let format = month + '/' + day + '/' + year;
 // Schema to create Link model
 const linkSchema = new Schema(
     {
-        url: {
+        urlFrom: {
             type: String,
             required: true,
         },
-        urlFrom: {
+        urlTo: {
             type: String,
+            required: true,
         },
         text: {
             type: String

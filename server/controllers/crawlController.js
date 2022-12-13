@@ -9,23 +9,36 @@ const { performance } = require("perf_hooks");
 const fs = require("fs");
 const { parse } = require("csv-parse");
 const asyncHandler = require("express-async-handler");
+const db = require("./config/connection");
+const DBLINK = require("../models/Link");
 
 // Call functions needed to add to the db
 // const {
-//     getLinks,
-//     getSingleLink,
-//     createLink,
-//     updateLink,
-//     deleteLink
-// } = require('../../controllers/linkController');
+//   getLinks,
+//   createLink,
+//   updateLink,
+// } = require("../../controllers/linkController");
+
+// ===================================== Important ===================================== //
+const maxArrayLength = 70; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
+const fetchRateLimiting = 500; // Rate limiting on the status code fetch in milliseconds
+const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
+// ===================================================================================== //
+// Arrays for the links and status resposne
+let crawledLinks = [];
+let formattedLinks = [];
+const linkStatus = [];
+let sitemapList = [];
+let FinalSitemapList = [];
+
+// Date format
+const date = new Date();
+let year = date.getFullYear();
+let month = date.getMonth() + 1;
+let day = date.getDate();
+let format = month + "/" + day + "/" + year;
 
 const CSVCrawlLink = asyncHandler(async (req, res) => {
-  // Date format
-  const date = new Date();
-  let year = date.getFullYear();
-  let month = date.getMonth() + 1;
-  let day = date.getDate();
-  let format = month + "/" + day + "/" + year;
   // Host URL and URL Protocol
   let urlProtocol;
   let hostUrl;
@@ -33,17 +46,8 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
   let pathURL;
   let crawlingURL;
   let runProxyBoolean = req.params;
-  // ===================================== Important ===================================== //
-  const maxArrayLength = 70; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-  const fetchRateLimiting = 500; // Rate limiting on the status code fetch in milliseconds
-  const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
-  // ===================================================================================== //
-  // Arrays for the links and status resposne
-  let crawledLinks = [];
-  let formattedLinks = [];
-  const linkStatus = [];
-  let sitemapList = [];
-  let FinalSitemapList = [];
+
+  // Step 1
   // Array for links read from the CSV
   const csvLinks = [];
   //   Code to read from csv
@@ -63,6 +67,7 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
       console.log("CSV scan finished");
     });
 
+  // Step 2 if used
   // Create an instance of a new crawler
   const crawlerInstance = new Crawler({
     headers: {
@@ -183,8 +188,9 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
   });
   // Check DB to see if the links in the array are in there. If its not create the link in the array.
 
-  startsCrawler();
+  startsCrawler(runProxyBoolean);
 });
+// Step 3
 // Converts incomplete links to make them hav its domain if it doens't already
 // For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
 // We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
@@ -253,6 +259,7 @@ const linkConverter = async (array) => {
   });
 };
 
+// Step 4
 // Checking the repsonse status of the link
 const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
@@ -282,13 +289,12 @@ const statusCheck = async (array) => {
         })
           .then((response) => {
             linkStatus.push({
-              URLFrom: linkCrawled.URLFrom,
-              link: newLinkCrawled,
+              urlFrom: linkCrawled.URLFrom,
+              urlTo: newLinkCrawled,
               text: linkCrawled.text,
-              statusCode: response.status,
+              linkStatus: response.status,
               statusText: response.statusText,
               linkFollow: linkCrawled.linkFollow,
-              // dateFound: linkCrawled.dateFound
             });
             index++;
             if (array.length - 1 === index) {
@@ -298,6 +304,7 @@ const statusCheck = async (array) => {
               console.log(
                 `Status check took ${endTime - startTime} milliseconds.`
               );
+              linkDB(linkStatus);
               // writeToJSON(linkStatus);
             }
           })
@@ -313,12 +320,11 @@ const statusCheck = async (array) => {
             // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
             linkStatus.push({
               URLFrom: linkCrawled.URLFrom,
-              link: newLinkCrawled,
+              urlTo: newLinkCrawled,
               text: linkCrawled.text,
-              statusCode: "Error on this link",
+              linkStatus: "Error on this link",
               statusText: "Error on this link",
               linkFollow: linkCrawled.linkFollow,
-              // dateFound: linkCrawled.dateFound
             });
             index++;
             if (array.length - 1 === index) {
@@ -330,6 +336,7 @@ const statusCheck = async (array) => {
               console.log(
                 `Status check took ${endTime - startTime} milliseconds.`
               );
+              linkDB(linkStatus);
               // writeToJSON(linkStatus);
             } else {
               // Run the fetch on the array thats being passed in again now that the error should be resolved
@@ -342,7 +349,21 @@ const statusCheck = async (array) => {
   runningArray(array);
 };
 
-// // Called to get a free proxy
+// Step 5: Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
+const linkDB = (array) => {
+  array.forEach((link) => {
+    // db.ProjectBacklinks.find({ "urlTo": { $in: [`${link.urlTo}`] } })
+    if (DBLINK.find({ urlTo: link })) {
+      DBLINK.findOneAndUpdate(
+        { urlTo: link },
+        { $set: { dateLastChecked: format } },
+        { runValidators: true, new: true }
+      );
+    }
+  });
+};
+
+// Called to get a free proxy
 const proxyGenerator = () => {
   // Establishing the variables
   let ip_addresses = [];
@@ -407,7 +428,7 @@ const proxyGenerator = () => {
 };
 
 // Determines if you use the proxyGenerator or the normal crawler
-const startsCrawler = async () => {
+const startsCrawler = async (runProxyBoolean) => {
   if (runProxyBoolean == true) {
     proxyGenerator();
   } else {
