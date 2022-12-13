@@ -24,6 +24,9 @@ const linkSchema = new Schema(
         linkStatus: {
             type: Number
         },
+        statusText: {
+            type: String
+        },
         linkFollow: {
             type: Boolean
         },

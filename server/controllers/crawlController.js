@@ -13,11 +13,12 @@ const db = require("./config/connection");
 const DBLINK = require("../models/Link");
 
 // Call functions needed to add to the db
-// const {
-//   getLinks,
-//   createLink,
-//   updateLink,
-// } = require("../../controllers/linkController");
+const {
+  getLinks,
+  createLink,
+  updateLinkbyURL,
+  updateLink,
+} = require("../../controllers/linkController");
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 70; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
@@ -182,16 +183,14 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
         // Passes array into function to convert it. Then takes the formatted links array and checks the link status putting it into an object
         linkConverter(crawledLinks);
         statusCheck(formattedLinks);
+        // After StatusCheck is done it will check the DB to see if the links in the array are in there. If its not create the link in the array.
       }
       done();
     },
   });
-  // Check DB to see if the links in the array are in there. If its not create the link in the array.
-
   startsCrawler(runProxyBoolean);
 });
-// Step 3
-// Converts incomplete links to make them hav its domain if it doens't already
+// Step 3: Converts incomplete links to make them have its domain if it doens't already.
 // For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
 // We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
 const linkConverter = async (array) => {
@@ -259,8 +258,7 @@ const linkConverter = async (array) => {
   });
 };
 
-// Step 4
-// Checking the repsonse status of the link
+// Step 4: Checking the repsonse status of the link
 const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
@@ -350,7 +348,7 @@ const statusCheck = async (array) => {
 };
 
 // Step 5: Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
-const linkDB = (array) => {
+const linkDB = async (array) => {
   array.forEach((link) => {
     // db.ProjectBacklinks.find({ "urlTo": { $in: [`${link.urlTo}`] } })
     if (DBLINK.find({ urlTo: link })) {
@@ -359,6 +357,18 @@ const linkDB = (array) => {
         { $set: { dateLastChecked: format } },
         { runValidators: true, new: true }
       );
+      //  updateLinkbyURL({dateLastChecked: format})
+    } else {
+      createLink({
+        urlFrom: array.urlFrom,
+        urlTo: array.urlTo,
+        text: array.text,
+        linkStatus: array.linkStatus,
+        statusText: array.statusText,
+        linkFollow: array.linkFollow,
+        dateFound: array.dateFound,
+        dateLastChecked: array.dateLastChecked,
+      });
     }
   });
 };
