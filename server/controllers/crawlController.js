@@ -80,7 +80,7 @@ const upload = async (req, res) => {
     // readCSV()
   } catch (err) {
     res.status(500).send({
-      message: `Could not upload the file: ${req.file}. ${err}`,
+      message: `Could not upload the file: ${req.file.originalname}. ${err}`,
     });
   }
 };
