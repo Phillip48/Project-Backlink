@@ -25,6 +25,7 @@ const maxArrayLength = 70; // Sets the number of list items in array you see in 
 const fetchRateLimiting = 500; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
+let fileName;
 // Arrays for the links and status resposne
 let crawledLinks = [];
 let formattedLinks = [];
@@ -41,20 +42,46 @@ let format = month + "/" + day + "/" + year;
 
 // ===================================================================================== //
 const upload = async (req, res) => {
+  // Array for links read from the CSV
+  const csvLinks = [];
   try {
     await uploadFile(req, res);
-    console.log(req.file.filename);
+    console.log(req.file)
+    fileName = req.file.filename;
+    // console.log(fileName);
     if (req.file == undefined) {
       return res.status(400).send({ message: "Please upload a file!" });
     }
-    fs.rename(`../resources/static/assets/uploads/${req.file.filename}`, `../resources/static/assets/uploads/csvcrawl.csv`, (err) => {
-        if (err) throw err;
-        console.log("\nFile Renamed!\n");
-      });
+    
+    fs.readFileSync(`../resources/static/assets/uploads/${fileName}`)
+    .pipe(parse({ delimiter: ",", from_line: 2 }))
+    .on("data", function (row) {
+      firstLinks = [...row].shift();
+      firstLinks.trim();
+      csvLinks.push(firstLinks);
+    })
+    .on("error", function (error) {
+      console.log(error.message);
+    })
+    .on("end", function () {
+      console.log("Links from reader:", csvLinks);
+      console.log("CSV scan finished");
+    //   fs.unlink(directoryPath + fileName, (err) => {
+    //     if (err) {
+    //       throw err;
+    //     }
+    //     console.log("Delete File successfully.");
+    //  });
+      //   CSVCrawlLink();
+    });
+    // fs.rename(`../resources/static/assets/uploads/${req.file.filename}`, `../resources/static/assets/uploads/csvcrawl.csv`, (err) => {
+    //     if (err) throw err;
+    //     console.log("\nFile Renamed!\n");
+    //   });
     // readCSV()
   } catch (err) {
     res.status(500).send({
-      message: `Could not upload the file: ${req.file}. ${err}`,
+      message: `Could not upload the file: ${fileName}. ${err}`,
     });
   }
 };
@@ -99,7 +126,8 @@ const readCSV = asyncHandler(async (req, res) => {
   // Array for links read from the CSV
   const csvLinks = [];
   //   Code to read from csv
-  fs.readFileSync('../resources/static/assets/uploads/csv.csv')
+  console.log("Filename", fileName);
+  fs.readFileSync(`../resources/static/assets/uploads/${fileName}`)
     .pipe(parse({ delimiter: ",", from_line: 2 }))
     .on("data", function (row) {
       firstLinks = [...row].shift();
@@ -114,11 +142,11 @@ const readCSV = asyncHandler(async (req, res) => {
       console.log("CSV scan finished");
       fs.unlink(directoryPath + fileName, (err) => {
         if (err) {
-            throw err;
+          throw err;
         }
         console.log("Delete File successfully.");
-    });
-    //   CSVCrawlLink();
+      });
+      //   CSVCrawlLink();
     });
 });
 
