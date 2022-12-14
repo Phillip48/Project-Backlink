@@ -28,7 +28,7 @@ const linkSchema = new Schema(
             type: String
         },
         linkFollow: {
-            type: Boolean
+            type: String
         },
         dateFound: {
             type: String,

@@ -25,24 +25,26 @@ const getSingleLink = asyncHandler(async (req, res) => {
 // create a new projects
 const createLink = asyncHandler(async (req, res) => {
   const link = await Link.create({
-    urlFrom: req.body.urlFrom,
-    urlTo: req.body.urlTo,
-    text: req.body.text,
-    linkStatus: req.body.linkStatus,
-    statusText: req.body.text,
-    linkFollow: req.body.linkFollow,
-    dateFound: req.body.dateFound,
-    dateLastChecked: req.body.dateLastChecked,
+    urlFrom: req.urlFrom,
+    urlTo: req.urlTo,
+    text: req.text,
+    linkStatus: req.linkStatus,
+    statusText: req.statusText,
+    linkFollow: req.linkFollow,
+    dateFound: req.dateFound,
+    dateLastChecked: req.dateLastChecked,
   });
-  res.status(200).json(link);
+  if (res){
+    res.status(200).send('Created');
+  } else {
+    console.log('controller log',link)
+  }
 });
 // update a projects
 const updateLink = asyncHandler(async (req, res) => {
-  const link = await Link.findById(req.params.id);
-
-  Link.findOneAndUpdate(
-    { _id: req.params.id },
-    { $set: req.body },
+  const link = await Link.findOneAndUpdate(
+    req.body.link,
+    { $addToSet: req.body },
     { runValidators: true, new: true }
   )
     .then((link) =>
@@ -51,6 +53,7 @@ const updateLink = asyncHandler(async (req, res) => {
         : res.json(link)
     )
     .catch((err) => res.status(500).json(err));
+  console.log(link)
   res.status(200).json(link);
 });
 

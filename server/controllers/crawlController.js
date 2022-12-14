@@ -21,11 +21,16 @@ const {
 } = require("../controllers/linkController");
 
 // ===================================== Important ===================================== //
-const maxArrayLength = 70; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-const fetchRateLimiting = 500; // Rate limiting on the status code fetch in milliseconds
+const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
+const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
-let fileName;
+// Host URL and URL Protocol
+let urlProtocol;
+let hostUrl;
+let rawHostUrl;
+let pathURL;
+let crawlingURL;
 // Array for links read from the CSV
 const csvLinks = [];
 // Arrays for the links and status resposne
@@ -34,6 +39,10 @@ let formattedLinks = [];
 const linkStatus = [];
 let sitemapList = [];
 let FinalSitemapList = [];
+
+// For the proxygenerator
+let proxyHost;
+let proxyPort;
 
 // Date format
 const date = new Date();
@@ -126,15 +135,9 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
     crawlerInstance.queue(csvLinks);
     // }, 1500);
   }, 1500);
-  // Host URL and URL Protocol
-  let urlProtocol;
-  let hostUrl;
-  let rawHostUrl;
-  let pathURL;
-  let crawlingURL;
   //   let runProxyBoolean = req.params;
 
-  // Step 2 if used
+  // Step  if used
   // Create an instance of a new crawler
   const crawlerInstance = new Crawler({
     headers: {
@@ -255,7 +258,7 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
     },
   });
 });
-// Step 3: Converts incomplete links to make them have its domain if it doens't already.
+// Step : Converts incomplete links to make them have its domain if it doens't already.
 // For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
 // We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
 const linkConverter = async (array) => {
@@ -323,7 +326,7 @@ const linkConverter = async (array) => {
   });
 };
 
-// Step 4: Checking the repsonse status of the link
+// Step : Checking the repsonse status of the link
 const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
@@ -344,7 +347,6 @@ const statusCheck = async (array) => {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
           },
-          // host: hostUrl,
           host: proxyHost,
           port: proxyPort,
           // retries: 2,
@@ -412,28 +414,36 @@ const statusCheck = async (array) => {
   runningArray(array);
 };
 
-// Step 5: Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
+// Step : Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
 const linkDB = async (array) => {
-  array.forEach((link) => {
-    // db.ProjectBacklinks.find({ "urlTo": { $in: [`${link.urlTo}`] } })
-    if (DBLINK.find({ urlTo: link })) {
-      DBLINK.findOneAndUpdate(
-        { urlTo: link },
+  console.log("---    Checking database    ---");
+  let index = 0;
+  array.forEach(async (link) => {
+    // const linkInDB = await DBLINK.findOne({ urlTo: link});
+    if (!await DBLINK.findOne({ urlTo: link.urlTo})) {
+      console.log("Creating", link);
+      createLink({
+        urlFrom: link.urlFrom,
+        urlTo: link.urlTo,
+        text: link.text,
+        linkStatus: link.linkStatus,
+        statusText: link.statusText,
+        linkFollow: link.linkFollow,
+        dateFound: format,
+        dateLastChecked: format,
+      });
+      index++;
+      //  updateLinkbyURL({dateLastChecked: format})
+    } else {
+      await DBLINK.findOneAndUpdate(
+        { urlTo: link.urlTo },
         { $set: { dateLastChecked: format } },
         { runValidators: true, new: true }
       );
-      //  updateLinkbyURL({dateLastChecked: format})
-    } else {
-      createLink({
-        urlFrom: array.urlFrom,
-        urlTo: array.urlTo,
-        text: array.text,
-        linkStatus: array.linkStatus,
-        statusText: array.statusText,
-        linkFollow: array.linkFollow,
-        dateFound: array.dateFound,
-        dateLastChecked: array.dateLastChecked,
-      });
+      index++;
+    }
+    if (array.length - 1 === index) {
+      console.log("Done with the Database");
     }
   });
 };
