@@ -1,9 +1,9 @@
-const express = require('express');
-const path = require('path');
-const db = require('./config/connection');
+const express = require("express");
+const path = require("path");
+const db = require("./config/connection");
 const bodyParser = require("body-parser");
-const routes = require('./routes');
-require('dotenv').config();
+const routes = require("./routes");
+require("dotenv").config();
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -36,32 +36,33 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(routes);
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/build')));
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/build")));
 
-    app.get('*', (req, res) =>
-        res.sendFile(
-            path.resolve(__dirname, '../', 'client', 'build', 'index.html')
-        )
-    );
+  app.get("*", (req, res) =>
+    res.sendFile(
+      path.resolve(__dirname, "../", "client", "build", "index.html")
+    )
+  );
 } else {
-    app.get('/', (req, res) => res.send('Please set to production'));
+  app.get("/", (req, res) => res.send("Please set to production"));
 }
 
 app.use(function (req, res) {
-    res.status(404).send({ url: req.originalUrl + ' not found' })
+  res.status(404).send({ url: req.originalUrl + " not found" });
 });
 
 // if (process.env.NODE_ENV === 'production') {
 //   app.use(express.static(path.join(__dirname, '../client/build')));
 // }
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/build/index.html"));
 });
 
-db.once('open', () => {
-    app.listen(PORT, () => {
-        console.log(`API server running on port ${PORT}!`);
-    })
-})
+db.once("open", () => {
+  app.listen(PORT, () => {
+    console.log("-------------------------------------------");
+    console.log(`API server running on port ${PORT}!`);
+  });
+});

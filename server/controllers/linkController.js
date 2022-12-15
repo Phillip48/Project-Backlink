@@ -34,6 +34,7 @@ const createLink = asyncHandler(async (req, res) => {
     dateFound: req.dateFound,
     dateLastChecked: req.dateLastChecked,
   });
+  // res.status(200).json('Finished creating links');
   if (res){
     res.status(200).send('Created');
   } else {

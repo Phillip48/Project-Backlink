@@ -415,12 +415,13 @@ const statusCheck = async (array) => {
 };
 
 // Step : Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
-const linkDB = async (array) => {
+const linkDB = (async (array)  => {
   console.log("---    Checking database    ---");
   let index = 0;
   array.forEach(async (link) => {
-    // const linkInDB = await DBLINK.findOne({ urlTo: link});
-    if (!await DBLINK.findOne({ urlTo: link.urlTo})) {
+    const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
+    console.log(linkInDB);
+    if (!linkInDB) {
       console.log("Creating", link);
       createLink({
         urlFrom: link.urlFrom,
@@ -433,7 +434,6 @@ const linkDB = async (array) => {
         dateLastChecked: format,
       });
       index++;
-      //  updateLinkbyURL({dateLastChecked: format})
     } else {
       await DBLINK.findOneAndUpdate(
         { urlTo: link.urlTo },
@@ -446,7 +446,7 @@ const linkDB = async (array) => {
       console.log("Done with the Database");
     }
   });
-};
+});
 
 // Called to get a free proxy
 const proxyGenerator = () => {
