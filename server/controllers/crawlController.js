@@ -386,36 +386,38 @@ const statusCheck = async (array) => {
               console.log("---    Error    ---");
               console.error(error);
               console.log("---    Retrying the fetch    ---");
-              fetch(e.link, {
-                method: "GET",
-                // These headers will allow for accurate status code and not get a 403
-                headers: {
-                  "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
-                },
-                keepalive: true,
-                maxSockets: 15,
-              }).then((response) => {
-                linkStatus.push({
-                  urlFrom: linkCrawled.URLFrom,
-                  urlTo: newLinkCrawled,
-                  text: linkCrawled.text,
-                  linkStatus: response.status,
-                  statusText: response.statusText,
-                  linkFollow: linkCrawled.linkFollow,
+              setTimeout(async function () {
+                fetch(e.link, {
+                  method: "GET",
+                  // These headers will allow for accurate status code and not get a 403
+                  headers: {
+                    "User-Agent":
+                      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+                  },
+                  keepalive: true,
+                  maxSockets: 15,
+                }).then((response) => {
+                  linkStatus.push({
+                    urlFrom: linkCrawled.URLFrom,
+                    urlTo: newLinkCrawled,
+                    text: linkCrawled.text,
+                    linkStatus: response.status,
+                    statusText: response.statusText,
+                    linkFollow: linkCrawled.linkFollow,
+                  });
+                  index++;
+                  if (array.length - 1 === index) {
+                    const endTime = performance.now();
+                    console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+                    console.log("Final array length", linkStatus.length);
+                    console.log(
+                      `Status check took ${endTime - startTime} milliseconds.`
+                    );
+                    linkDB(linkStatus);
+                    // writeToJSON(linkStatus);
+                  }
                 });
-                index++;
-                if (array.length - 1 === index) {
-                  const endTime = performance.now();
-                  console.dir(linkStatus, { maxArrayLength: maxArrayLength });
-                  console.log("Final array length", linkStatus.length);
-                  console.log(
-                    `Status check took ${endTime - startTime} milliseconds.`
-                  );
-                  linkDB(linkStatus);
-                  // writeToJSON(linkStatus);
-                }
-              });
+              }, 2000);
             } catch {
               console.log("---    Fetch retry failed    ---");
               // Removes from the array so when it does the 2 fetch it wont get the same error
@@ -434,6 +436,7 @@ const statusCheck = async (array) => {
               });
             }
             index++;
+            console.log("---    Continuing the check    ---");
             if (array.length - 1 === index) {
               console.dir("Final Array", linkStatus, {
                 maxArrayLength: maxArrayLength,
