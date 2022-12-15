@@ -34,11 +34,10 @@ const createLink = asyncHandler(async (req, res) => {
     dateFound: req.dateFound,
     dateLastChecked: req.dateLastChecked,
   })
-    // .then((res) =>
-    //   !res ? res.status(200).json("Created") : res.status(200).json("Created")
-    // )
-    .catch((err) => res.status(500).json(err));
-  res.status(200).json('Finished creating links');
+    .then((res) =>
+      !res ? res.status(200).json("Created") : res.status(200).json("Created")
+    )
+    .catch((err) => !res ? console.log(err) : res.status(500).json(err));
 });
 
 // update a projects
