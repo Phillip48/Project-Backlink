@@ -33,19 +33,37 @@ const createLink = asyncHandler(async (req, res) => {
     linkFollow: req.linkFollow,
     dateFound: req.dateFound,
     dateLastChecked: req.dateLastChecked,
-  });
-  // res.status(200).json('Finished creating links');
-  if (res){
-    res.status(200).send('Created');
-  } else {
-    console.log('controller log',link)
-  }
+  })
+    // .then((res) =>
+    //   !res ? res.status(200).json("Created") : res.status(200).json("Created")
+    // )
+    .catch((err) => res.status(500).json(err));
+  res.status(200).json('Finished creating links');
 });
+
 // update a projects
 const updateLink = asyncHandler(async (req, res) => {
   const link = await Link.findOneAndUpdate(
-    req.body.link,
+    req.body,
     { $addToSet: req.body },
+    { runValidators: true, new: true }
+  )
+    .then((link) =>
+      !link
+        ? res.status(404).json({ message: "No link with this id!" })
+        : res.json('Done updating')
+    )
+    .catch((err) => res.status(500).json(err));
+  // console.log(link);
+  res.status(200).json('Done updating');
+});
+
+const updateLinkbyURL = asyncHandler(async (req, res) => {
+  const link = await Link.findById(req.params.id);
+
+  Link.findOneAndUpdate(
+    { urlTo: req.link },
+    { $set: req.body },
     { runValidators: true, new: true }
   )
     .then((link) =>
@@ -54,26 +72,8 @@ const updateLink = asyncHandler(async (req, res) => {
         : res.json(link)
     )
     .catch((err) => res.status(500).json(err));
-  console.log(link)
   res.status(200).json(link);
 });
-
-const updateLinkbyURL = asyncHandler(async (req, res) => {
-    const link = await Link.findById(req.params.id);
-  
-    Link.findOneAndUpdate(
-      { urlTo: req.link },
-      { $set: req.body },
-      { runValidators: true, new: true }
-    )
-      .then((link) =>
-        !link
-          ? res.status(404).json({ message: "No link with this id!" })
-          : res.json(link)
-      )
-      .catch((err) => res.status(500).json(err));
-    res.status(200).json(link);
-  });
 // Delete a projects
 const deleteLink = asyncHandler(async (req, res) => {
   const link = await Link.findById(req.params.id);

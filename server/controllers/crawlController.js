@@ -11,6 +11,7 @@ const { parse } = require("csv-parse");
 const db = require("../config/connection");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
+const successMiddleware = require("../middleware/successMiddleware");
 
 // Call functions needed to add to the db
 const {
@@ -22,7 +23,7 @@ const {
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
+const fetchRateLimiting = 2000; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
 // Host URL and URL Protocol
@@ -52,6 +53,7 @@ let day = date.getDate();
 let format = month + "/" + day + "/" + year;
 
 // ===================================================================================== //
+//  Step 1: Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
 const upload = async (req, res) => {
   try {
     await uploadFile(req, res);
@@ -61,32 +63,36 @@ const upload = async (req, res) => {
       return res.status(400).send({ message: "Please upload a file!" });
     }
     // rename file so it's always the same
-    fs.rename(
-      `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
-      `${__basedir}/resources/static/assets/uploads/crawlcsv.csv`,
-      (err) => {
-        if (err) throw err;
-        console.log("\nFile Renamed!\n");
-      }
-    );
+    setTimeout(async function () {
+      fs.rename(
+        `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
+        `${__basedir}/resources/static/assets/uploads/crawlcsv.csv`,
+        (err) => {
+          if (err) throw err;
+          console.log("\nFile Renamed!\n");
+        }
+      );
+    }, 1000);
     // Read the csv file and get the links
-    fs.createReadStream(
-      __basedir + `/resources/static/assets/uploads/crawlcsv.csv`
-    )
-      .pipe(parse({ delimiter: ",", from_line: 2 }))
-      .on("data", function (row) {
-        firstLinks = [...row].shift();
-        firstLinks.trim();
-        csvLinks.push(firstLinks);
-      })
-      .on("error", function (error) {
-        console.log(error.message);
-      })
-      .on("end", function () {
-        console.log("Links from reader:", csvLinks);
-        console.log("CSV scan finished");
-        CSVCrawlLink();
-      });
+    setTimeout(async function () {
+      fs.createReadStream(
+        __basedir + `/resources/static/assets/uploads/crawlcsv.csv`
+      )
+        .pipe(parse({ delimiter: ",", from_line: 2 }))
+        .on("data", function (row) {
+          firstLinks = [...row].shift();
+          firstLinks.trim();
+          csvLinks.push(firstLinks);
+        })
+        .on("error", function (error) {
+          console.log(error.message);
+        })
+        .on("end", function () {
+          console.log("Links from reader:", csvLinks);
+          console.log("CSV scan finished");
+          CSVCrawlLink();
+        });
+    }, 1000);
   } catch (err) {
     res.status(500).send({
       message: `Could not upload the file: ${req.file.originalname}. ${err}`,
@@ -131,13 +137,14 @@ const download = (req, res) => {
 };
 
 const CSVCrawlLink = asyncHandler(async (req, res) => {
+  // Step 3 calls the crawl as soon as the function is called
   setTimeout(async function () {
     crawlerInstance.queue(csvLinks);
     // }, 1500);
   }, 1500);
   //   let runProxyBoolean = req.params;
 
-  // Step  if used
+  // Step 4
   // Create an instance of a new crawler
   const crawlerInstance = new Crawler({
     headers: {
@@ -258,7 +265,7 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
     },
   });
 });
-// Step : Converts incomplete links to make them have its domain if it doens't already.
+// Step 5: Converts incomplete links to make them have its domain if it doens't already.
 // For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
 // We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
 const linkConverter = async (array) => {
@@ -326,7 +333,7 @@ const linkConverter = async (array) => {
   });
 };
 
-// Step : Checking the repsonse status of the link
+// Step 6: Checking the repsonse status of the link
 const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
@@ -405,6 +412,7 @@ const statusCheck = async (array) => {
               // writeToJSON(linkStatus);
             } else {
               // Run the fetch on the array thats being passed in again now that the error should be resolved
+              //   Rerunning after error
               runningArray(array);
             }
           });
@@ -414,15 +422,14 @@ const statusCheck = async (array) => {
   runningArray(array);
 };
 
-// Step : Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
-const linkDB = (async (array)  => {
+// Step 7: Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
+const linkDB = async (array) => {
   console.log("---    Checking database    ---");
   let index = 0;
   array.forEach(async (link) => {
     const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
     console.log(linkInDB);
     if (!linkInDB) {
-      console.log("Creating", link);
       createLink({
         urlFrom: link.urlFrom,
         urlTo: link.urlTo,
@@ -443,12 +450,14 @@ const linkDB = (async (array)  => {
       index++;
     }
     if (array.length - 1 === index) {
-      console.log("Done with the Database");
+      console.log("-------------------------------------------");
+      //   console.log("Done with the Database");
+      successMiddleware;
     }
   });
-});
+};
 
-// Called to get a free proxy
+// Step 1-2: Called to get a free proxy
 const proxyGenerator = () => {
   // Establishing the variables
   let ip_addresses = [];
@@ -527,7 +536,6 @@ const startsCrawler = async (runProxyBoolean) => {
 
 module.exports = {
   CSVCrawlLink,
-  //   readCSV,
   upload,
   getListFiles,
   download,
