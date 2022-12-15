@@ -23,7 +23,7 @@ const {
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-const fetchRateLimiting = 2000; // Rate limiting on the status code fetch in milliseconds
+const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
 // Host URL and URL Protocol
@@ -354,8 +354,10 @@ const statusCheck = async (array) => {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
           },
-          host: proxyHost,
-          port: proxyPort,
+          keepalive: true,
+          maxSockets: 15,
+        //   host: !proxyHost ? "localhost" : proxyHost,
+        //   port: !proxyPort ? 3001 : proxyPort,
           // retries: 2,
           retryDelay: 3000,
         })
@@ -376,7 +378,7 @@ const statusCheck = async (array) => {
               console.log(
                 `Status check took ${endTime - startTime} milliseconds.`
               );
-              linkDB(linkStatus);
+                linkDB(linkStatus);
               // writeToJSON(linkStatus);
             }
           })
@@ -408,7 +410,7 @@ const statusCheck = async (array) => {
               console.log(
                 `Status check took ${endTime - startTime} milliseconds.`
               );
-              linkDB(linkStatus);
+                linkDB(linkStatus);
               // writeToJSON(linkStatus);
             } else {
               // Run the fetch on the array thats being passed in again now that the error should be resolved
