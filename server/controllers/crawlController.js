@@ -8,10 +8,8 @@ const newFetch = require("fetch-retry")(fetch);
 const { performance } = require("perf_hooks");
 const fs = require("fs");
 const { parse } = require("csv-parse");
-const db = require("../config/connection");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
-const successMiddleware = require("../middleware/successMiddleware");
 
 // Call functions needed to add to the db
 const {
@@ -397,10 +395,6 @@ const statusCheck = async (array) => {
                 },
                 keepalive: true,
                 maxSockets: 15,
-                //   host: !proxyHost ? "localhost" : proxyHost,
-                //   port: !proxyPort ? 3001 : proxyPort,
-                // retries: 2,
-                // retryDelay: 3000,
               }).then((response) => {
                 linkStatus.push({
                   urlFrom: linkCrawled.URLFrom,
@@ -453,7 +447,6 @@ const statusCheck = async (array) => {
               // writeToJSON(linkStatus);
             } else {
               // Run the fetch on the array thats being passed in again now that the error should be resolved
-              //   Rerunning after error
               runningArray(array);
             }
           });
@@ -469,7 +462,6 @@ const linkDB = async (array) => {
   let index = 0;
   array.forEach(async (link) => {
     const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
-    console.log(linkInDB);
     if (!linkInDB) {
       createLink({
         urlFrom: link.urlFrom,
@@ -493,7 +485,6 @@ const linkDB = async (array) => {
     if (array.length - 1 === index) {
       console.log("-------------------------------------------");
       console.log("Done with the Database");
-      successMiddleware;
     }
   });
 };
