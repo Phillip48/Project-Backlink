@@ -33,11 +33,12 @@ const createLink = asyncHandler(async (req, res) => {
     linkFollow: req.linkFollow,
     dateFound: req.dateFound,
     dateLastChecked: req.dateLastChecked,
-  })
-    .then((res) =>
-      !res ? res.status(200).json("Created") : res.status(200).json("Created")
-    )
-    .catch((err) => !res ? console.log(err) : res.status(500).json(err));
+  });
+  if (res) {
+    res.status(200).json("Finished creating links");
+  } else {
+    console.log("Finished creating links");
+  }
 });
 
 // update a projects
@@ -50,11 +51,17 @@ const updateLink = asyncHandler(async (req, res) => {
     .then((link) =>
       !link
         ? res.status(404).json({ message: "No link with this id!" })
-        : res.json('Done updating')
+        : res.json("Done updating")
     )
-    .catch((err) => res.status(500).json(err));
+    .catch((err) =>
+      !res ? console.log("Finished upadating links") : res.status(500).json(err)
+    );
   // console.log(link);
-  res.status(200).json('Done updating');
+  if (res) {
+    res.status(200).json("Done updating");
+  } else {
+    console.log("Finished upadating links");
+  }
 });
 
 const updateLinkbyURL = asyncHandler(async (req, res) => {
