@@ -453,7 +453,7 @@ const linkDB = async (array) => {
     }
     if (array.length - 1 === index) {
       console.log("-------------------------------------------");
-      //   console.log("Done with the Database");
+        console.log("Done with the Database");
       successMiddleware;
     }
   });
