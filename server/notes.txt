@@ -1,0 +1,3 @@
+To do:
+- Imporve the crawler status code (403 sometimes)
+- Keep testing the catch on the fetch to try and get as much accurate links 
