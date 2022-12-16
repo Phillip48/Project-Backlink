@@ -22,7 +22,7 @@ const linkSchema = new Schema(
             type: String
         },
         linkStatus: {
-            type: Number
+            type: String
         },
         statusText: {
             type: String
