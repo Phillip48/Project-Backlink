@@ -406,7 +406,6 @@ const statusCheck = async (array) => {
                     statusText: response.statusText,
                     linkFollow: linkCrawled.linkFollow,
                   });
-                  console.log(linkStatus)
                   index++;
                   if (array.length - 1 === index) {
                     const endTime = performance.now();
