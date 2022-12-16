@@ -352,8 +352,8 @@ const statusCheck = async (array) => {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
           },
-          keepalive: true,
-          maxSockets: 15,
+        //   keepalive: true,
+        //   maxSockets: 15,
           //   host: !proxyHost ? "localhost" : proxyHost,
           //   port: !proxyPort ? 3001 : proxyPort,
           // retries: 2,
@@ -382,61 +382,65 @@ const statusCheck = async (array) => {
           })
           // If theres an error run this code
           .catch((error) => {
-            try {
-              console.log("---    Error    ---");
-              console.error(error);
-              console.log("---    Retrying the fetch    ---");
-              setTimeout(async function () {
-                fetch(e.link, {
-                  method: "GET",
-                  // These headers will allow for accurate status code and not get a 403
-                  headers: {
-                    "User-Agent":
-                      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
-                  },
-                  keepalive: true,
-                  maxSockets: 15,
-                }).then((response) => {
-                  linkStatus.push({
-                    urlFrom: linkCrawled.URLFrom,
-                    urlTo: newLinkCrawled,
-                    text: linkCrawled.text,
-                    linkStatus: response.status,
-                    statusText: response.statusText,
-                    linkFollow: linkCrawled.linkFollow,
-                  });
-                  index++;
-                  if (array.length - 1 === index) {
-                    const endTime = performance.now();
-                    console.dir(linkStatus, { maxArrayLength: maxArrayLength });
-                    console.log("Final array length", linkStatus.length);
-                    console.log(
-                      `Status check took ${endTime - startTime} milliseconds.`
-                    );
-                    linkDB(linkStatus);
-                    // writeToJSON(linkStatus);
-                  }
+            console.log("---    Error    ---");
+            console.error(error);
+            console.log(error.link)
+            console.log("---    Retrying the fetch    ---");
+            setTimeout(async function () {
+              fetch(error.link, {
+                method: "GET",
+                // These headers will allow for accurate status code and not get a 403
+                headers: {
+                  "User-Agent":
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+                },
+                keepalive: true,
+                maxSockets: 15,
+              })
+              .then((response) => {
+                console.log("Retry successful");
+                linkStatus.push({
+                  urlFrom: linkCrawled.URLFrom,
+                  urlTo: newLinkCrawled,
+                  text: linkCrawled.text,
+                  linkStatus: response.status,
+                  statusText: response.statusText,
+                  linkFollow: linkCrawled.linkFollow,
                 });
-              }, 2000);
-            } catch {
-              console.log("---    Fetch retry failed    ---");
-              // Removes from the array so when it does the 2 fetch it wont get the same error
-              array.splice(
-                array.findIndex((e) => e.link === newLinkCrawled),
-                1
-              );
-              // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
-              linkStatus.push({
-                URLFrom: linkCrawled.URLFrom,
-                urlTo: newLinkCrawled,
-                text: linkCrawled.text,
-                linkStatus: "Error on this link",
-                statusText: "Error on this link",
-                linkFollow: linkCrawled.linkFollow,
+
+                index++;
+                if (array.length - 1 === index) {
+                  const endTime = performance.now();
+                  console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+                  console.log("Final array length", linkStatus.length);
+                  console.log(
+                    `Status check took ${endTime - startTime} milliseconds.`
+                  );
+                  linkDB(linkStatus);
+                  // writeToJSON(linkStatus);
+                }
+              })
+              .catch((error) => {
+                console.log("---    Fetch retry failed    ---");
+                // Removes from the array so when it does the 2 fetch it wont get the same error
+                array.splice(
+                  array.findIndex((error) => error.link === newLinkCrawled),
+                  1
+                );
+                // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
+                linkStatus.push({
+                  URLFrom: linkCrawled.URLFrom,
+                  urlTo: newLinkCrawled,
+                  text: linkCrawled.text,
+                  linkStatus: "Error on this link",
+                  statusText: "Error on this link",
+                  linkFollow: linkCrawled.linkFollow,
+                });
+                index++;
+                console.log("---    Continuing the check    ---");
               });
-            }
-            index++;
-            console.log("---    Continuing the check    ---");
+            }, 2000);
+
             if (array.length - 1 === index) {
               console.dir("Final Array", linkStatus, {
                 maxArrayLength: maxArrayLength,
