@@ -406,7 +406,7 @@ const statusCheck = async (array) => {
                     statusText: response.statusText,
                     linkFollow: linkCrawled.linkFollow,
                   });
-                  console.log("---    Continuing the check    ---");
+                  console.log(linkStatus)
                   index++;
                   if (array.length - 1 === index) {
                     const endTime = performance.now();
@@ -416,8 +416,8 @@ const statusCheck = async (array) => {
                       `Status check took ${endTime - startTime} milliseconds.`
                     );
                     linkDB(linkStatus);
-                    // writeToJSON(linkStatus);
                   }
+                  console.log("---    Continuing the check    ---");
                 })
                 .catch((error) => {
                   console.log("---    Fetch retry failed    ---");
