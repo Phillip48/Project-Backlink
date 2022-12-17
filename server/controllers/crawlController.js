@@ -371,7 +371,7 @@ const statusCheck = async (array) => {
             index++;
             if (array.length - 1 === index) {
               const endTime = performance.now();
-              console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+            //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
               console.log("Final array length", linkStatus.length);
               console.log(
                 `Status check took ${endTime - startTime} milliseconds.`
@@ -440,9 +440,9 @@ const statusCheck = async (array) => {
                 });
             }, 3000);
             if (array.length - 1 === index) {
-              console.dir("Final Array", linkStatus, {
-                maxArrayLength: maxArrayLength,
-              });
+            //   console.dir("Final Array", linkStatus, {
+            //     maxArrayLength: maxArrayLength,
+            //   });
               const endTime = performance.now();
               console.log("Final array length", linkStatus.length);
               console.log(
