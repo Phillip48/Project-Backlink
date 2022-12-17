@@ -21,7 +21,7 @@ const {
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
+const fetchRateLimiting = 2000; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
 // Host URL and URL Protocol
@@ -420,6 +420,7 @@ const statusCheck = async (array) => {
                 })
                 .catch((error) => {
                   console.log("---    Fetch retry failed    ---");
+                  console.log('Error:', error)
                   // Removes from the array so when it does the 2 fetch it wont get the same error
                   array.splice(
                     array.findIndex((error) => error.link === newLinkCrawled),
@@ -437,7 +438,7 @@ const statusCheck = async (array) => {
                   index++;
                   console.log("---    Continuing the check    ---");
                 });
-            }, 2000);
+            }, 3000);
             if (array.length - 1 === index) {
               console.dir("Final Array", linkStatus, {
                 maxArrayLength: maxArrayLength,
