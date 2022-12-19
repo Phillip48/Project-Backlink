@@ -139,7 +139,7 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
   setTimeout(async function () {
     crawlerInstance.queue(csvLinks);
     // }, 1500);
-  }, 1500);
+  }, 2000);
   //   let runProxyBoolean = req.params;
 
   // Step 4
