@@ -21,7 +21,7 @@ const {
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-const fetchRateLimiting = 2000; // Rate limiting on the status code fetch in milliseconds
+const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
 // Host URL and URL Protocol
@@ -371,7 +371,7 @@ const statusCheck = async (array) => {
             index++;
             if (array.length - 1 === index) {
               const endTime = performance.now();
-            //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+              //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
               console.log("Final array length", linkStatus.length);
               console.log(
                 `Status check took ${endTime - startTime} milliseconds.`
@@ -406,6 +406,8 @@ const statusCheck = async (array) => {
                     statusText: response.statusText,
                     linkFollow: linkCrawled.linkFollow,
                   });
+                  console.log(newLinkCrawled);
+                  console.log(response.status);
                   index++;
                   if (array.length - 1 === index) {
                     const endTime = performance.now();
@@ -420,7 +422,7 @@ const statusCheck = async (array) => {
                 })
                 .catch((error) => {
                   console.log("---    Fetch retry failed    ---");
-                  console.log('Error:', error)
+                  console.log("Error:", error);
                   // Removes from the array so when it does the 2 fetch it wont get the same error
                   array.splice(
                     array.findIndex((error) => error.link === newLinkCrawled),
@@ -440,9 +442,9 @@ const statusCheck = async (array) => {
                 });
             }, 3000);
             if (array.length - 1 === index) {
-            //   console.dir("Final Array", linkStatus, {
-            //     maxArrayLength: maxArrayLength,
-            //   });
+              //   console.dir("Final Array", linkStatus, {
+              //     maxArrayLength: maxArrayLength,
+              //   });
               const endTime = performance.now();
               console.log("Final array length", linkStatus.length);
               console.log(
@@ -463,7 +465,7 @@ const statusCheck = async (array) => {
 
 // Step 7: Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
 const linkDB = async (array) => {
-  console.log("---    Checking database    ---");
+  console.log("---    Updating/Creating links in the Database    ---");
   let index = 0;
   array.forEach(async (link) => {
     const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
