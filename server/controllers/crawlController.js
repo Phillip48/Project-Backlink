@@ -21,7 +21,7 @@ const {
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
+const fetchRateLimiting = 1500; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
 // Host URL and URL Protocol
@@ -398,6 +398,8 @@ const statusCheck = async (array) => {
               })
                 .then((response) => {
                   console.log("Retry successful");
+                  console.log(newLinkCrawled);
+                  console.log(response.status);
                   linkStatus.push({
                     urlFrom: linkCrawled.URLFrom,
                     urlTo: newLinkCrawled,
@@ -406,8 +408,7 @@ const statusCheck = async (array) => {
                     statusText: response.statusText,
                     linkFollow: linkCrawled.linkFollow,
                   });
-                  console.log(newLinkCrawled);
-                  console.log(response.status);
+
                   index++;
                   if (array.length - 1 === index) {
                     const endTime = performance.now();
