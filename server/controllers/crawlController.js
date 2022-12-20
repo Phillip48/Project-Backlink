@@ -389,7 +389,7 @@ const statusCheck = async (array) => {
           // If theres an error run this code
           .catch((error) => {
             console.log("---    Error    ---");
-            console.error(error);
+            // console.error(error);
             console.log("---    Retrying the fetch    ---");
             setTimeout(async function () {
               fetch(newLinkCrawled, {
