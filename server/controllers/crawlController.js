@@ -10,6 +10,7 @@ const fs = require("fs");
 const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
+const http = require('http')
 
 // Call functions needed to add to the db
 const {
@@ -336,6 +337,8 @@ const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
   console.log("Status check array length", array.length);
+  let httpAgent = new http.Agent()
+  httpAgent.maxSockets = 15
   const runningArray = async (array) => {
     // console.log("Array length", array.length);
     await array.forEach((linkCrawled, i) => {
@@ -348,6 +351,7 @@ const statusCheck = async (array) => {
         // newFetch or fetch
         fetch(newLinkCrawled, {
           method: "GET",
+          pool: httpAgent,
           // These headers will allow for accurate status code and not get a 403
           headers: {
             "User-Agent":
@@ -390,6 +394,7 @@ const statusCheck = async (array) => {
             setTimeout(async function () {
               fetch(newLinkCrawled, {
                 method: "GET",
+                pool: httpAgent,
                 // These headers will allow for accurate status code and not get a 403
                 headers: {
                   "User-Agent":
