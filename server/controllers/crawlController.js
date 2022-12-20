@@ -338,7 +338,7 @@ const statusCheck = async (array) => {
   let index = 0;
   console.log("Status check array length", array.length);
   let httpAgent = new http.Agent()
-  httpAgent.maxSockets = 15
+  httpAgent.maxSockets = 10
   const runningArray = async (array) => {
     // console.log("Array length", array.length);
     await array.forEach((linkCrawled, i) => {
@@ -358,7 +358,7 @@ const statusCheck = async (array) => {
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
           },
           keepalive: true,
-          maxSockets: 15,
+          // maxSockets: 15,
           //   host: !proxyHost ? "localhost" : proxyHost,
           //   port: !proxyPort ? 3001 : proxyPort,
           // retries: 2,
@@ -401,7 +401,7 @@ const statusCheck = async (array) => {
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
                 },
                 keepalive: true,
-                maxSockets: 15,
+                // maxSockets: 15,
               })
                 .then((response) => {
                   console.log("Retry successful");
