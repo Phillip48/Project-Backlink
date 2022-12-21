@@ -11,6 +11,7 @@ const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
 const http = require("http");
+const https = require("https");
 
 // Call functions needed to add to the db
 const {
@@ -22,7 +23,7 @@ const {
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
-const fetchRateLimiting = 1500; // Rate limiting on the status code fetch in milliseconds
+const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
 // Host URL and URL Protocol
@@ -398,8 +399,12 @@ const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
   console.log("Status check array length", array.length);
-  let httpAgent = new http.Agent();
+  const httpAgent = new http.Agent({ keepalive: true });
+  const httpsAgent = new https.Agent({ keepAlive: true });
   httpAgent.maxSockets = 10;
+  httpsAgent.maxSockets = 10;
+  const agent = (_parsedURL) =>
+    _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
   const runningArray = async (array) => {
     // console.log("Array length", array.length);
     await array.forEach((linkCrawled, i) => {
@@ -412,7 +417,8 @@ const statusCheck = async (array) => {
         // newFetch or fetch
         fetch(newLinkCrawled, {
           method: "GET",
-          pool: httpAgent,
+          // pool: httpAgent,
+          agent,
           // These headers will allow for accurate status code and not get a 403
           headers: {
             "User-Agent":
