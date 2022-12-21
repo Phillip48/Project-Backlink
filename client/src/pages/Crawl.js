@@ -1,7 +1,11 @@
 import React from "react";
 
-const CrawlPage = () => {
-
+function CrawlPage() {
+    return(
+        <section className="">
+            
+        </section>
+    );
 }
 
 export default CrawlPage;
