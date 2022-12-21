@@ -10,7 +10,7 @@ const fs = require("fs");
 const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
-const http = require('http')
+const http = require("http");
 
 // Call functions needed to add to the db
 const {
@@ -139,10 +139,74 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
   // Step 3 calls the crawl as soon as the function is called
   setTimeout(async function () {
     crawlerInstance.queue(csvLinks);
+    // proxyGenerator();
     // }, 1500);
   }, 2000);
   //   let runProxyBoolean = req.params;
 
+  // Step 1-2: Called to get a free proxy
+  const proxyGenerator = () => {
+    // Establishing the variables
+    let ip_addresses = [];
+    let port_numbers = [];
+    let random_number;
+
+    // Uses request and cheerio to pull the free proxies from the link and randomzies the port and proxy so when you crawl it doesn't hit the same website from the same ip address
+    request("https://sslproxies.org/", function (error, response, html) {
+      if (!error && response.statusCode == 200) {
+        const $ = cheerio.load(html);
+
+        $("td:nth-child(5)").each(function (index, value) {
+          if ($(this).text().includes("elite")) {
+            $("td:nth-child(1)").each(function (index, value) {
+              ip_addresses[index] = $(this).text();
+            });
+
+            $("td:nth-child(2)").each(function (index, value) {
+              port_numbers[index] = $(this).text();
+            });
+          }
+        });
+      } else {
+        console.log("Error loading proxy, please try again", error);
+      }
+
+      ip_addresses.join(", ");
+      port_numbers.join(", ");
+
+      random_number = Math.floor(Math.random() * 8);
+
+      proxyRotation = `http://${ip_addresses[random_number]}:${port_numbers[random_number]}`;
+      proxyHost = ip_addresses[random_number];
+      proxyPort = port_numbers[random_number];
+
+      const proxyCheck = {
+        host: ip_addresses[random_number],
+        port: port_numbers[random_number],
+        // proxyAuth: "y0adXjeO:pAzAHCr4",
+      };
+
+      console.log("Checking Proxy", proxyCheck);
+
+      proxy_checker(proxyCheck)
+        .then((res) => {
+          console.log("Good Proxy", res); // true
+          setTimeout(function () {
+            // console.log(csvLinks);
+            csvLinks.forEach((link) => {
+              crawlerInstance.queue({
+                uri: link,
+                proxy: proxyRotation,
+              });
+            });
+          }, 0);
+        })
+        .catch((error) => {
+          console.error("error", error); // ECONNRESET
+          proxyGenerator();
+        });
+    });
+  };
   // Step 4
   // Create an instance of a new crawler
   const crawlerInstance = new Crawler({
@@ -165,9 +229,6 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
     callback: (error, res, done) => {
       if (error) {
         console.log("---    Error    ---", error);
-        console.log(
-          "---    The crawler will retry and is getting a new proxy.    ---"
-        );
         // proxyGenerator();
       } else {
         const startTime = performance.now();
@@ -337,8 +398,8 @@ const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
   console.log("Status check array length", array.length);
-  let httpAgent = new http.Agent()
-  httpAgent.maxSockets = 10
+  let httpAgent = new http.Agent();
+  httpAgent.maxSockets = 10;
   const runningArray = async (array) => {
     // console.log("Array length", array.length);
     await array.forEach((linkCrawled, i) => {
@@ -359,10 +420,10 @@ const statusCheck = async (array) => {
           },
           keepalive: true,
           // maxSockets: 15,
-          //   host: !proxyHost ? "localhost" : proxyHost,
-          //   port: !proxyPort ? 3001 : proxyPort,
-          // retries: 2,
-          //   retryDelay: 3000,
+          // host: !proxyHost ? null : proxyHost,
+          // port: !proxyPort ? null : proxyPort,
+          host: rawHostUrl,
+          path: pathURL,
         })
           .then((response) => {
             linkStatus.push({
@@ -389,7 +450,7 @@ const statusCheck = async (array) => {
           // If theres an error run this code
           .catch((error) => {
             console.log("---    Error    ---");
-            // console.error(error);
+            console.error(error);
             console.log("---    Retrying the fetch    ---");
             setTimeout(async function () {
               fetch(newLinkCrawled, {
@@ -501,70 +562,6 @@ const linkDB = async (array) => {
       console.log("-------------------------------------------");
       console.log("Done with the Database");
     }
-  });
-};
-
-// Step 1-2: Called to get a free proxy
-const proxyGenerator = () => {
-  // Establishing the variables
-  let ip_addresses = [];
-  let port_numbers = [];
-  let random_number;
-
-  // Uses request and cheerio to pull the free proxies from the link and randomzies the port and proxy so when you crawl it doesn't hit the same website from the same ip address
-  request("https://sslproxies.org/", function (error, response, html) {
-    if (!error && response.statusCode == 200) {
-      const $ = cheerio.load(html);
-
-      $("td:nth-child(5)").each(function (index, value) {
-        if ($(this).text().includes("elite")) {
-          $("td:nth-child(1)").each(function (index, value) {
-            ip_addresses[index] = $(this).text();
-          });
-
-          $("td:nth-child(2)").each(function (index, value) {
-            port_numbers[index] = $(this).text();
-          });
-        }
-      });
-    } else {
-      console.log("Error loading proxy, please try again", error);
-    }
-
-    ip_addresses.join(", ");
-    port_numbers.join(", ");
-
-    random_number = Math.floor(Math.random() * 8);
-
-    proxyRotation = `http://${ip_addresses[random_number]}:${port_numbers[random_number]}`;
-    proxyHost = ip_addresses[random_number];
-    proxyPort = port_numbers[random_number];
-
-    const proxyCheck = {
-      host: ip_addresses[random_number],
-      port: port_numbers[random_number],
-      // proxyAuth: "y0adXjeO:pAzAHCr4",
-    };
-
-    console.log("Checking Proxy", proxyCheck);
-
-    proxy_checker(proxyCheck)
-      .then((res) => {
-        console.log("Good Proxy", res); // true
-        setTimeout(function () {
-          // console.log(csvLinks);
-          csvLinks.forEach((link) => {
-            crawlerInstance.queue({
-              uri: link,
-              proxy: proxyRotation,
-            });
-          });
-        }, 0);
-      })
-      .catch((error) => {
-        console.error("error", error); // ECONNRESET
-        proxyGenerator();
-      });
   });
 };
 
