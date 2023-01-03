@@ -23,6 +23,57 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+/* ========================== */
+/* Nav */
+
+.main-header {
+  display: flex;
+  padding: 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-home-page {
+  display: flex;
+}
+
+.header-links {
+  display: flex;
+}
+
+.header-nav-a-tag {
+  cursor: pointer;
+  text-decoration: none;
+  color: black;
+}
+
+.header-nav-a-tag:hover {
+  color: red;
+}
+
+/* ================ */
+/* Inital crawl page */
+.crawl-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.topnav{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.crawl-form{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 /* 
 @keyframes App-logo-spin {
   from {
