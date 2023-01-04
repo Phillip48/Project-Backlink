@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
-import Spinner from "../Spinner";
+import Spinner from "../components/Spinner";
 import {
   createLink,
   crawlLink,
@@ -9,32 +9,43 @@ import {
 } from "../../src/features/links/linksSlice";
 
 function CrawlPage() {
+
   const { isLoading, isError, message } = useSelector((state) => state.links);
 
   const dispatch = useDispatch();
-  const [formState, setFormState] = useState({});
 
-  const { file } = formState;
+  const [inputFile, setInputFile] = useState("");
+  const [inputFileName, setInputFileName] = useState("");
+  const [formState, setFormState] = useState("");
+  // const { csvFile } = formState;
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
 
-    setFormState({
-      ...formState,
-      [name]: value,
-    });
+    setInputFile(event.target.files[0]);
+    setInputFileName(event.target.files[0].name);
+    setFormState({ ...formState, [event.target.name]: event.target.value });
+    // const { name, value } = event.target.files;
+
+    // setFormState({
+    //   ...formState,
+    //   [name]: value,
+    // });
+    console.log(formState)
+    console.log(inputFile)
+    console.log(inputFileName)
   };
 
   // submit form
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     const userData = {
-      file,
+      inputFile,
     };
+    console.log(userData)
     dispatch(crawlLink(userData));
     // clear
-    setFormState({});
-    window.location.reload();
+    // setFormState({});
+    // window.location.reload();
   };
 
   useEffect(() => {
@@ -78,7 +89,7 @@ function CrawlPage() {
               id="user-input-file1"
               name="user-input-file1"
               accept=".csv"
-              value={formState.file}
+              value={formState.csvFile}
               onChange={handleChange}
             />
             <button type="submit" onClick={handleFormSubmit}>

@@ -13,7 +13,7 @@ const crawlSite = async (linksData, token) => {
 
 // Get user projects
 const getLinks = async () => {
-  const response = await axios.get(API_URL + "links", config);
+  const response = await axios.get(API_URL + "links");
 
   return response.data;
 };
@@ -21,7 +21,7 @@ const getLinks = async () => {
 // Delete user project
 const deleteProject = async (projectId, token) => {
   console.log(projectId);
-  const response = await axios.delete(API_URL + "links/" + projectId, config);
+  const response = await axios.delete(API_URL + "links/" + projectId);
 
   return response.data;
 };

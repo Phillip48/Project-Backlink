@@ -182,5 +182,5 @@ export const linksSlice = createSlice({
   },
 })
 
-export const { reset } = projectSlice.actions
-export default projectSlice.reducer
+export const { reset } = linksSlice.actions
+export default linksSlice.reducer
