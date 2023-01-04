@@ -1,32 +1,30 @@
-import axios from 'axios'
+import axios from "axios";
 
-const API_URL = '/api/crawler/'
+const API_URL = "/api/crawler/";
 
 // upload - to upload csv and crawl
 
 // Create new project
-const crawlSite = async (projectData, token) => {
-
-  const response = await axios.post(API_URL + 'upload', projectData)
-
-  return response.data
-}
+const crawlSite = async (linksData, token) => {
+  console.log("Data", linksData);
+  const response = await axios.post(API_URL + "upload", linksData);
+  return response.data;
+};
 
 // Get user projects
 const getLinks = async () => {
+  const response = await axios.get(API_URL + "links", config);
 
-  const response = await axios.get(API_URL + 'links', config)
-
-  return response.data
-}
+  return response.data;
+};
 
 // Delete user project
 const deleteProject = async (projectId, token) => {
-  console.log(projectId)
-  const response = await axios.delete(API_URL + 'links/' + projectId, config)
+  console.log(projectId);
+  const response = await axios.delete(API_URL + "links/" + projectId, config);
 
-  return response.data
-}
+  return response.data;
+};
 
 // Update projects
 // const updateProject = async (projectId, token) => {
@@ -47,6 +45,6 @@ const linksService = {
   getLinks,
   deleteProject,
   // updateProject
-}
+};
 
-export default linksService
+export default linksService;
