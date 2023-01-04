@@ -1,65 +1,52 @@
 import axios from 'axios'
 
-const API_URL = '/api/project/'
+const API_URL = '/api/crawler/'
+
+// upload - to upload csv and crawl
 
 // Create new project
-const createProject = async (projectData, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
+const crawlSite = async (projectData, token) => {
 
-  const response = await axios.post(API_URL + 'projects', projectData, config)
+  const response = await axios.post(API_URL + 'upload', projectData)
 
   return response.data
 }
 
 // Get user projects
-const getProjects = async (token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
+const getLinks = async () => {
 
-  const response = await axios.get(API_URL + 'projects', config)
+  const response = await axios.get(API_URL + 'links', config)
 
   return response.data
 }
 
 // Delete user project
 const deleteProject = async (projectId, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
   console.log(projectId)
-  const response = await axios.delete(API_URL + 'projects/' + projectId, config)
+  const response = await axios.delete(API_URL + 'links/' + projectId, config)
 
   return response.data
 }
 
 // Update projects
-const updateProject = async (projectId, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-  let projectIdReal = projectId.projectId
+// const updateProject = async (projectId, token) => {
+//   const config = {
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//     },
+//   }
+//   let projectIdReal = projectId.projectId
 
-  const response = await axios.put(API_URL + 'projects/' + projectIdReal, projectId, config)
+//   const response = await axios.put(API_URL + 'projects/' + projectIdReal, projectId, config)
 
-  return response.data
-}
+//   return response.data
+// }
 
-const projectService = {
-  createProject,
-  getProjects,
+const linksService = {
+  crawlSite,
+  getLinks,
   deleteProject,
-  updateProject
+  // updateProject
 }
 
-export default projectService
+export default linksService
