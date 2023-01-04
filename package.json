@@ -7,9 +7,10 @@
     "nodemon": "^2.0.20"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node server/server.js",
     "dev": "concurrently \"npm run server \"npm run client",
     "server": "nodemon server/server.js",
+    "client": "npm start --prefix client",
     "develop": "concurrently \"cd server && npm run watch \"cd client && npm run start",
     "build": "cd client && npm run build"
   }
