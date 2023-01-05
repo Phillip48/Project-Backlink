@@ -85,8 +85,8 @@ function CrawlPage() {
             <br></br>
             <input
               type="file"
-              id="user-input-file1"
-              name="user-input-file1"
+              id="csvFile"
+              name="csvFile"
               accept=".csv"
               value={formState.csvFile}
               onChange={handleChange}

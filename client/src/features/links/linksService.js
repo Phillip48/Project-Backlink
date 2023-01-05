@@ -6,14 +6,13 @@ const API_URL = "/api/crawler/";
 
 // Create new project
 const crawlSite = async (linksData) => {
-  console.log("Data", linksData.inputFile);
+  console.log("csvFile", linksData.inputFile);
   const response = await axios({
     method: "post",
     headers: {
-      "Content-Type": "multipart/form-data",
-      "Accept": "application/json"
+      "Content-Type": "multipart/form-data"
    },
-    url: API_URL + "upload",
+    url: "/api/crawler/upload",
     data: { linksData },
   });
   console.log("response data line 11", response);

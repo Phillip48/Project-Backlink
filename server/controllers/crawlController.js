@@ -10,6 +10,8 @@ const fs = require("fs");
 const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
+const multer = require('multer');
+const uploadMulter = multer({ dest: 'uploads/' })
 const http = require("http");
 const https = require("https");
 
@@ -56,6 +58,7 @@ let format = month + "/" + day + "/" + year;
 //  Step 1: Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
 const upload = async (req, res) => {
   try {
+    console.log(req.body)
     await uploadFile(req, res);
     fileName = req.file;
     // console.log(fileName);
@@ -95,7 +98,7 @@ const upload = async (req, res) => {
     }, 1000);
   } catch (err) {
     res.status(500).send({
-      message: `Could not upload the file: ${req.file.originalname}. ${err}`,
+      message: `Could not upload the file. ${err}`,
     });
   }
 };
