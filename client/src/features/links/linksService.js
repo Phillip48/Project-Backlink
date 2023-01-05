@@ -5,9 +5,10 @@ const API_URL = "/api/crawler/";
 // upload - to upload csv and crawl
 
 // Create new project
-const crawlSite = async (linksData, token) => {
-  console.log("Data", linksData);
-  const response = await axios.post(API_URL + "upload", linksData);
+const crawlSite = async (linksData) => {
+  console.log("Data", linksData.inputFile);
+  const response = await axios.post(API_URL + "upload", linksData.inputFile);
+  console.log('response data line 11', response.data)
   return response.data;
 };
 

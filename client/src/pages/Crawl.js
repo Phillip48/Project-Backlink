@@ -30,7 +30,6 @@ function CrawlPage() {
     //   ...formState,
     //   [name]: value,
     // });
-    console.log(formState)
     console.log(inputFile)
     console.log(inputFileName)
   };
@@ -41,10 +40,10 @@ function CrawlPage() {
     const userData = {
       inputFile,
     };
-    console.log(userData)
+    // console.log('before sending data', userData)
     dispatch(crawlLink(userData));
     // clear
-    // setFormState({});
+    setFormState({});
     // window.location.reload();
   };
 
