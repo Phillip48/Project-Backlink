@@ -31,7 +31,7 @@ function CrawlPage() {
     //   [name]: value,
     // });
     console.log(inputFile)
-    console.log(inputFileName)
+    // console.log(inputFileName)
   };
 
   // submit form
