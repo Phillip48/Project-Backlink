@@ -2,6 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
+import axios from 'axios';
 import {
   createLink,
   crawlLink,
@@ -9,7 +10,6 @@ import {
 } from "../../src/features/links/linksSlice";
 
 function CrawlPage() {
-
   const { isLoading, isError, message } = useSelector((state) => state.links);
 
   const dispatch = useDispatch();
@@ -20,7 +20,6 @@ function CrawlPage() {
   // const { csvFile } = formState;
 
   const handleChange = (event) => {
-
     setInputFile(event.target.files[0]);
     setInputFileName(event.target.files[0].name);
     setFormState({ ...formState, [event.target.name]: event.target.value });
@@ -30,18 +29,16 @@ function CrawlPage() {
     //   ...formState,
     //   [name]: value,
     // });
-    console.log(inputFile)
+    console.log(inputFile);
     // console.log(inputFileName)
   };
 
   // submit form
   const handleFormSubmit = async (event) => {
+    let formData = new FormData();
+    formData.append('csvFile', inputFile);
     event.preventDefault();
-    const userData = {
-      inputFile,
-    };
-    // console.log('before sending data', userData)
-    dispatch(crawlLink(userData));
+    dispatch(crawlLink(formData));
     // clear
     setFormState({});
     // window.location.reload();
@@ -80,16 +77,21 @@ function CrawlPage() {
 
       <div className="topnav">
         <div className="search-container">
-          <form className="crawl-form">
+          <form
+            enctype="multipart/form-data"
+            className="crawl-form"
+            id="csvFile_upload"
+          >
             <span>CSV file:</span>
             <br></br>
             <input
               type="file"
-              id="csvFile"
-              name="csvFile"
+              id="csvFile_input"
+              // name="csvFile"
               accept=".csv"
               value={formState.csvFile}
               onChange={handleChange}
+              webkitdirectory multiple
             />
             <button type="submit" onClick={handleFormSubmit}>
               Submit

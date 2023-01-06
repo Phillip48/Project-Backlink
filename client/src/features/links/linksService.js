@@ -5,16 +5,16 @@ const API_URL = "/api/crawler/";
 // upload - to upload csv and crawl
 
 // Create new project
-const crawlSite = async (linksData) => {
-  console.log("csvFile", linksData.inputFile);
-  const response = await axios({
-    method: "post",
-    headers: {
-      "Content-Type": "multipart/form-data"
-   },
-    url: "/api/crawler/upload",
-    data: { linksData },
-  });
+const crawlSite = async (formData) => {
+  console.log("csvFile", formData);
+  const headers = {
+    "Content-Type": "multipart/form-data",
+  };
+  const response = await axios
+    .post("/api/crawler/upload", formData, headers)
+    .then((resp) => {
+      console.log(resp);
+    });
   console.log("response data line 11", response);
   return response.data;
 };

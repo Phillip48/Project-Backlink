@@ -58,7 +58,6 @@ let format = month + "/" + day + "/" + year;
 //  Step 1: Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
 const upload = async (req, res) => {
   try {
-    console.log(req.body)
     await uploadFile(req, res);
     fileName = req.file;
     // console.log(fileName);
