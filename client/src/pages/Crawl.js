@@ -23,14 +23,6 @@ function CrawlPage() {
     setInputFile(event.target.files[0]);
     setInputFileName(event.target.files[0].name);
     setFormState({ ...formState, [event.target.name]: event.target.value });
-    // const { name, value } = event.target.files;
-
-    // setFormState({
-    //   ...formState,
-    //   [name]: value,
-    // });
-    console.log(inputFile);
-    // console.log(inputFileName)
   };
 
   // submit form

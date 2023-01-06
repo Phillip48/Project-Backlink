@@ -10,8 +10,8 @@ const fs = require("fs");
 const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
-const multer = require('multer');
-const uploadMulter = multer({ dest: 'uploads/' })
+const multer = require("multer");
+const uploadMulter = multer({ dest: "uploads/" });
 const http = require("http");
 const https = require("https");
 
@@ -54,8 +54,9 @@ let month = date.getMonth() + 1;
 let day = date.getDate();
 let format = month + "/" + day + "/" + year;
 
-// ===================================================================================== //
+// ================================== Code =================================================== //
 //  Step 1: Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
+
 const upload = async (req, res) => {
   try {
     await uploadFile(req, res);
@@ -569,6 +570,7 @@ const linkDB = async (array) => {
     if (array.length - 1 === index) {
       console.log("-------------------------------------------");
       console.log("Done with the Database");
+      return;
     }
   });
 };
