@@ -1,85 +1,85 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import linksService from './linksService'
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import linksService from "./linksService";
 
 const initialState = {
   projects: [],
   isError: false,
   isSuccess: false,
   isLoading: false,
-  message: '',
-}
+  message: "",
+};
 
 // crawl new link
 export const crawlLink = createAsyncThunk(
-  'links/crawl',
+  "links/crawl",
   async (linksData, thunkAPI) => {
     try {
-      return await linksService.crawlSite(linksData)
+      return await linksService.crawlSite(linksData);
     } catch (error) {
       const message =
         (error.response &&
           error.response.data &&
           error.response.data.message) ||
         error.message ||
-        error.toString()
-      return thunkAPI.rejectWithValue(message)
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
     }
   }
-)
+);
 
 // Create new Project
-export const createLink = createAsyncThunk(
-  'links/create',
-  async (linksData, thunkAPI) => {
-    try {
-      return await linksService.createLink(linksData)
-    } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
-      return thunkAPI.rejectWithValue(message)
-    }
-  }
-)
+// export const createLink = createAsyncThunk(
+//   'links/create',
+//   async (linksData, thunkAPI) => {
+//     try {
+//       return await linksService.createLink(linksData)
+//     } catch (error) {
+//       const message =
+//         (error.response &&
+//           error.response.data &&
+//           error.response.data.message) ||
+//         error.message ||
+//         error.toString()
+//       return thunkAPI.rejectWithValue(message)
+//     }
+//   }
+// )
 
 // Get user projects
-export const getLinks= createAsyncThunk(
-  'links/getAll',
+export const getLinks = createAsyncThunk(
+  "links/getAll",
   async (_, thunkAPI) => {
     try {
-      return await linksService.getLinks()
+      return await linksService.getLinks();
     } catch (error) {
       const message =
         (error.response &&
           error.response.data &&
           error.response.data.message) ||
         error.message ||
-        error.toString()
-      return thunkAPI.rejectWithValue(message)
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
     }
   }
-)
+);
 
 // Delete user send
 export const deleteLinks = createAsyncThunk(
-  'links/delete',
+  "links/delete",
   async (id, thunkAPI) => {
     try {
-      return await linksService.deleteProject(id)
+      return await linksService.deleteProject(id);
     } catch (error) {
       const message =
         (error.response &&
           error.response.data &&
           error.response.data.message) ||
         error.message ||
-        error.toString()
-      return thunkAPI.rejectWithValue(message)
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
     }
   }
-)
+);
 
 // update user send
 // export const updateProject = createAsyncThunk(
@@ -100,87 +100,86 @@ export const deleteLinks = createAsyncThunk(
 //   }
 // )
 
-
 export const linksSlice = createSlice({
-  name: 'links',
+  name: "links",
   initialState,
   reducers: {
     reset: (state) => initialState,
   },
   extraReducers: (builder) => {
     builder
-    .addCase(crawlLink.pending, (state) => {
-      state.isLoading = true
-    })
-    .addCase(crawlLink.fulfilled, (state, action) => {
-      state.isLoading = false
-      state.isSuccess = true
-      state.links.push(action.payload)
-    })
-    .addCase(crawlLink.rejected, (state, action) => {
-      state.isLoading = false
-      state.isError = true
-      state.message = action.payload
-    })
-      .addCase(createLink.pending, (state) => {
-        state.isLoading = true
+      .addCase(crawlLink.pending, (state) => {
+        state.isLoading = true;
       })
-      .addCase(createLink.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.isSuccess = true
-        state.links.push(action.payload)
+      .addCase(crawlLink.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.links.push(action.payload);
       })
-      .addCase(createLink.rejected, (state, action) => {
-        state.isLoading = false
-        state.isError = true
-        state.message = action.payload
+      .addCase(crawlLink.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
       })
-      .addCase(getLinks.pending, (state) => {
-        state.isLoading = true
-      })
-      .addCase(getLinks.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.isSuccess = true
-        state.links = action.payload
-      })
-      .addCase(getLinks.rejected, (state, action) => {
-        state.isLoading = false
-        state.isError = true
-        state.message = action.payload
-      })
-      .addCase(deleteLinks.pending, (state) => {
-        state.isLoading = true
-      })
-      .addCase(deleteLinks.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.isSuccess = true
-        state.links = state.links.filter(
-          (link) => link._id !== action.payload.id
-        )
-      })
-      .addCase(deleteLinks.rejected, (state, action) => {
-        state.isLoading = false
-        state.isError = true
-        state.message = action.payload
-      })
-      // 
-      // .addCase(updateProject.pending, (state) => {
+      // .addCase(createLink.pending, (state) => {
       //   state.isLoading = true
       // })
-      // .addCase(updateProject.fulfilled, (state, action) => {
+      // .addCase(createLink.fulfilled, (state, action) => {
       //   state.isLoading = false
       //   state.isSuccess = true
-      //   state.projects = state.projects.filter(
-      //     (project) => project._id !== action.payload.id
-      //   )
+      //   state.links.push(action.payload)
       // })
-      // .addCase(updateProject.rejected, (state, action) => {
+      // .addCase(createLink.rejected, (state, action) => {
       //   state.isLoading = false
       //   state.isError = true
       //   state.message = action.payload
       // })
+      .addCase(getLinks.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getLinks.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.links = action.payload;
+      })
+      .addCase(getLinks.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(deleteLinks.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteLinks.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.links = state.links.filter(
+          (link) => link._id !== action.payload.id
+        );
+      })
+      .addCase(deleteLinks.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      });
+    //
+    // .addCase(updateProject.pending, (state) => {
+    //   state.isLoading = true
+    // })
+    // .addCase(updateProject.fulfilled, (state, action) => {
+    //   state.isLoading = false
+    //   state.isSuccess = true
+    //   state.projects = state.projects.filter(
+    //     (project) => project._id !== action.payload.id
+    //   )
+    // })
+    // .addCase(updateProject.rejected, (state, action) => {
+    //   state.isLoading = false
+    //   state.isError = true
+    //   state.message = action.payload
+    // })
   },
-})
+});
 
-export const { reset } = linksSlice.actions
-export default linksSlice.reducer
+export const { reset } = linksSlice.actions;
+export default linksSlice.reducer;

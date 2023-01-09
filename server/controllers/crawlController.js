@@ -54,14 +54,12 @@ let month = date.getMonth() + 1;
 let day = date.getDate();
 let format = month + "/" + day + "/" + year;
 
-let finishedRunning = false;
-
 // ================================== Code =================================================== //
 //  Step : Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
 
 const manageArray = asyncHandler(async (req, res) => {
   await upload(req, res);
-  res.send(200).json('File uploading and being crawled')
+  res.send(200).json('File uploading and being crawled');
 })
 
 const upload = async (req, res) => {

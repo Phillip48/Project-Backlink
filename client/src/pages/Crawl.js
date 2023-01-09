@@ -2,7 +2,6 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
-import axios from 'axios';
 import {
   createLink,
   crawlLink,
@@ -90,6 +89,9 @@ function CrawlPage() {
             </button>
           </form>
         </div>
+      </div>
+      <div className="crawl_link_links">
+        <a href="/links">Crawled Links - Click Here!</a>
       </div>
     </section>
   );

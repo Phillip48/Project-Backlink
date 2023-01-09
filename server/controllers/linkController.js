@@ -5,9 +5,9 @@ const asyncHandler = require("express-async-handler");
 // Get all projects
 const getLinks = asyncHandler(async (req, res) => {
   const link = await Link.find({ link: req.link });
-
   res.status(200).json(link);
 });
+
 // Get a single projects
 const getSingleLink = asyncHandler(async (req, res) => {
   const link = await Link.findById(req.params.id);
@@ -23,23 +23,23 @@ const getSingleLink = asyncHandler(async (req, res) => {
   res.status(200).json(link);
 });
 // create a new projects
-const createLink = asyncHandler(async (req, res) => {
-  const link = await Link.create({
-    urlFrom: req.urlFrom,
-    urlTo: req.urlTo,
-    text: req.text,
-    linkStatus: req.linkStatus,
-    statusText: req.statusText,
-    linkFollow: req.linkFollow,
-    dateFound: req.dateFound,
-    dateLastChecked: req.dateLastChecked,
-  });
-  if (res) {
-    res.status(200).json("Finished creating links");
-  } else {
-    // console.log("Finished creating links");
-  }
-});
+// const createLink = asyncHandler(async (req, res) => {
+//   const link = await Link.create({
+//     urlFrom: req.urlFrom,
+//     urlTo: req.urlTo,
+//     text: req.text,
+//     linkStatus: req.linkStatus,
+//     statusText: req.statusText,
+//     linkFollow: req.linkFollow,
+//     dateFound: req.dateFound,
+//     dateLastChecked: req.dateLastChecked,
+//   });
+//   if (res) {
+//     res.status(200).json("Finished creating links");
+//   } else {
+//     // console.log("Finished creating links");
+//   }
+// });
 
 // update a projects
 const updateLink = asyncHandler(async (req, res) => {
@@ -80,6 +80,7 @@ const updateLinkbyURL = asyncHandler(async (req, res) => {
     .catch((err) => res.status(500).json(err));
   res.status(200).json(link);
 });
+
 // Delete a projects
 const deleteLink = asyncHandler(async (req, res) => {
   const link = await Link.findById(req.params.id);
@@ -92,7 +93,6 @@ const deleteLink = asyncHandler(async (req, res) => {
 module.exports = {
   getLinks,
   getSingleLink,
-  createLink,
   updateLink,
   deleteLink,
 };
