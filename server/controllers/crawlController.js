@@ -59,10 +59,10 @@ let finishedRunning = false;
 // ================================== Code =================================================== //
 //  Step : Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
 
-const manageArray = async (req, res) => {
+const manageArray = asyncHandler(async (req, res) => {
   await upload(req, res);
-  res.json('Running the upload and crawl')
-}
+  res.send(200).json('File uploading and being crawled')
+})
 
 const upload = async (req, res) => {
   try {
