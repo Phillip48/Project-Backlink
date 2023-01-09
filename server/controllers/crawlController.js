@@ -54,8 +54,15 @@ let month = date.getMonth() + 1;
 let day = date.getDate();
 let format = month + "/" + day + "/" + year;
 
+let finishedRunning = false;
+
 // ================================== Code =================================================== //
-//  Step 1: Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
+//  Step : Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
+
+const manageArray = async (req, res) => {
+  await upload(req, res);
+  res.json('Running the upload and crawl')
+}
 
 const upload = async (req, res) => {
   try {
@@ -97,6 +104,7 @@ const upload = async (req, res) => {
         });
     }, 1000);
   } catch (err) {
+    console.log(err)
     res.status(500).send({
       message: `Could not upload the file. ${err}`,
     });
@@ -139,7 +147,7 @@ const download = (req, res) => {
   });
 };
 
-const CSVCrawlLink = asyncHandler(async (req, res) => {
+const CSVCrawlLink = asyncHandler(async () => {
   // Step 3 calls the crawl as soon as the function is called
   setTimeout(async function () {
     crawlerInstance.queue(csvLinks);
@@ -329,7 +337,8 @@ const CSVCrawlLink = asyncHandler(async (req, res) => {
     },
   });
 });
-// Step 5: Converts incomplete links to make them have its domain if it doens't already.
+
+// Step : Converts incomplete links to make them have its domain if it doens't already.
 // For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
 // We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
 const linkConverter = async (array) => {
@@ -397,7 +406,7 @@ const linkConverter = async (array) => {
   });
 };
 
-// Step 6: Checking the repsonse status of the link
+// Step : Checking the repsonse status of the link
 const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
@@ -541,7 +550,7 @@ const statusCheck = async (array) => {
   runningArray(array);
 };
 
-// Step 7: Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
+// Step : Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
 const linkDB = async (array) => {
   console.log("---    Updating/Creating links in the Database    ---");
   let index = 0;
@@ -575,22 +584,10 @@ const linkDB = async (array) => {
   });
 };
 
-// Determines if you use the proxyGenerator or the normal crawler
-const startsCrawler = async (runProxyBoolean) => {
-  if (runProxyBoolean == true) {
-    proxyGenerator();
-  } else {
-    // This timeout allows time for the csv to be read
-    setTimeout(async function () {
-      crawlerInstance.queue(csvLinks);
-      // }, 1500);
-    }, 1500);
-  }
-};
-
 module.exports = {
   CSVCrawlLink,
   upload,
   getListFiles,
   download,
+  manageArray
 };

@@ -7,24 +7,15 @@ const {uploadLink} = require('../../middleware/multerUpload');
 const {
   CSVCrawlLink,
   upload,
+  manageArray,
   getListFiles,
   download,
 } = require("../../controllers/crawlController");
 
-const {
-  CSVCrawlLinkv2,
-  uploadv2,
-} = require("../../controllers/crawlControllerV2");
-
 // Route
 // /api/crawler
 
-router.post("/upload", upload);
-router.post('/upload2', uploadLink.single("csvFile"), function (req, res) {
-  res.end("File Upload successfull: Here it is!: "+JSON.stringify(req.file))
-});
-// router.post("/upload", uploadMulter.single('csvFile'));
-router.post("/uploadv2", uploadv2);
+router.post("/upload", manageArray);
 router.get("/files", getListFiles);
 router.get("/files/:name", download);
 
