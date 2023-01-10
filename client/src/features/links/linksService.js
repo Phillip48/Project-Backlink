@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "/api/crawler/";
+const API_URL = "/api/get-link/";
 
 // upload - to upload csv and crawl
 
@@ -21,7 +21,7 @@ const crawlSite = async (formData) => {
 // Get user projects
 const getLinks = async () => {
   const response = await axios.get(API_URL + "links");
-
+  
   return response.data;
 };
 

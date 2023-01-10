@@ -59,7 +59,9 @@ let format = month + "/" + day + "/" + year;
 
 const manageArray = asyncHandler(async (req, res) => {
   await upload(req, res);
-  res.send(200).json('File uploading and being crawled');
+  if(res){
+    res.sendStatus(200).json('File uploading and being crawled');
+  }
 })
 
 const upload = async (req, res) => {
@@ -101,9 +103,12 @@ const upload = async (req, res) => {
           CSVCrawlLink();
         });
     }, 1000);
+    if(res){
+      res.sendStatus(200).json('File uploading and being crawled');
+    }
   } catch (err) {
     console.log(err)
-    res.status(500).send({
+    res.sendStatus(500).send({
       message: `Could not upload the file. ${err}`,
     });
   }

@@ -14,8 +14,8 @@ const {
 
 // Route
 // /api/crawler
-
-router.post("/upload", manageArray);
+// manageArray
+router.post("/upload", upload);
 router.get("/files", getListFiles);
 router.get("/files/:name", download);
 
