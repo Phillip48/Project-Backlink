@@ -29,8 +29,15 @@ function LinkItem({ links }) {
     return <Spinner />;
   }
   return (
-    <section className="links_item">
-      <p>test: {links.urlFrom}</p>
+    <section className="links_item_div">
+      <p className="links_item">urlFrom: <b>{links.urlFrom}</b></p>
+      <p className="links_item">urlTo: <b>{links.urlTo}</b></p>
+      <p className="links_item">text: <b>{links.text}</b></p>
+      <p className="links_item">linkStatus: <b>{links.linkStatus}</b></p>
+      <p className="links_item">statusText: <b>{links.statusText}</b></p>
+      <p className="links_item">linkFollow: <b>{links.linkFollow}</b></p>
+      <p className="links_item">dateFound: <b>{links.dateFound}</b></p>
+      <p className="links_item">dateLastChecked: <b>{links.dateLastChecked}</b></p>
     </section>
   );
 }

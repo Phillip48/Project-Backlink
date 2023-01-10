@@ -10,6 +10,7 @@ import {
 import LinkItem from "../components/items/LinkItem";
 
 const LinkPage = () => {
+  let linksCount = 0;
   const { isLoading, isError, message } = useSelector((state) => state.links);
   const { links } = useSelector((state) => state.links);
   const dispatch = useDispatch();
@@ -17,6 +18,17 @@ const LinkPage = () => {
   const mapLinks = () => {
     if (links) {
       return links.map((links) => <LinkItem key={links.id} links={links} />);
+    } else {
+      return "No links";
+    }
+  };
+  
+  const linkStatCounter = () => {
+    if (links) {
+      links.forEach((links) => {
+        linksCount++;
+      });
+      return linksCount;
     } else {
       return "No links";
     }
@@ -42,6 +54,7 @@ const LinkPage = () => {
     <section className="main_links_section">
       <div className="links_title">
         <h3>Search for links:</h3>
+        <h3>Total links:{linkStatCounter()}</h3>
       </div>
       <div className="links_results">{mapLinks()}</div>
     </section>
