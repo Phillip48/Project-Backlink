@@ -79,10 +79,10 @@
 .links_results{
   display: flex;
   flex-direction: column;
-  width: 33%;
+  /* width: 33%; */
 }
 .links_item_div{
-  margin: 2rem;
+  margin: 1.3rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
