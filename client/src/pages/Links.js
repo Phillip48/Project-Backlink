@@ -31,6 +31,7 @@ const LinkPage = () => {
           <LinkItem key={links.id} links={links} />
         ));
         const filteredLinks = getLinks.filter((links) => {
+          console.log(links)
           return links.urlFrom == formState;
         });
         return filteredLinks;
