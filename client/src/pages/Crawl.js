@@ -5,6 +5,7 @@ import Spinner from "../components/Spinner";
 import {
   createLink,
   crawlLink,
+  recheckLinks,
   deleteLinks,
 } from "../../src/features/links/linksSlice";
 
@@ -33,6 +34,11 @@ function CrawlPage() {
     // clear
     setFormState({});
     // window.location.reload();
+  };
+
+  const handleFormSubmitRecheck = async (event) => {
+    event.preventDefault();
+    dispatch(recheckLinks());
   };
 
   useEffect(() => {
@@ -92,6 +98,9 @@ function CrawlPage() {
       </div>
       <div className="crawl_link_links">
         <a href="/links">Crawled Links - Click Here!</a>
+      </div>
+      <div className="crawl_link_links">
+        <button onClick={handleFormSubmitRecheck}>Recheck DB Links</button>
       </div>
     </section>
   );

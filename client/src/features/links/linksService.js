@@ -25,6 +25,13 @@ const getLinks = async () => {
   return response.data;
 };
 
+
+const recheckLinks = async () => {
+  const response = await axios.get("/api/crawler/upload");
+  
+  return response.data;
+};
+
 // Delete user project
 const deleteProject = async (projectId, token) => {
   console.log(projectId);
@@ -50,6 +57,7 @@ const deleteProject = async (projectId, token) => {
 const linksService = {
   crawlSite,
   getLinks,
+  recheckLinks,
   deleteProject,
   // updateProject
 };

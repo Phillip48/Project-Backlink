@@ -63,6 +63,24 @@ export const getLinks = createAsyncThunk(
   }
 );
 
+// Get user projects
+export const recheckLinks = createAsyncThunk(
+  "links/recheckAll",
+  async (_, thunkAPI) => {
+    try {
+      return await linksService.recheckLinks();
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // Delete user send
 export const deleteLinks = createAsyncThunk(
   "links/delete",
@@ -134,6 +152,19 @@ export const linksSlice = createSlice({
       //   state.isError = true
       //   state.message = action.payload
       // })
+      .addCase(recheckLinks.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(recheckLinks.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.links = action.payload;
+      })
+      .addCase(recheckLinks.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
       .addCase(getLinks.pending, (state) => {
         state.isLoading = true;
       })
