@@ -11,11 +11,12 @@ const linksFromDB = []; // Array
 
 // Test
 const recheckDB = asyncHandler(async (req, res) => {
-    const linkInDB = await DBLINK.find( !linkStatus == 200);
-    linkInDB.push(linksFromDB)
+  const linkInDB = await DBLINK.find(!linkStatus == 200);
+  linkInDB.push(linksFromDB);
 
-    await statusCheckFromDB(linksFromDB)
-        .then(()=> {res.json('Done')})
+  await statusCheckFromDB(linksFromDB).then(() => {
+    res.json("Done");
+  });
 });
 
 // Step : Checking the repsonse status of the link
@@ -170,6 +171,7 @@ const linkDB = async (array) => {
     // Link is grabbed from db so it has to be in there
     await DBLINK.findOneAndUpdate(
       { urlTo: link.urlTo },
+      { $set: { statusCheck: link.statusCheck } },
       { $set: { dateLastChecked: format } },
       { runValidators: true, new: true }
     );
@@ -183,5 +185,5 @@ const linkDB = async (array) => {
 };
 
 module.exports = {
-    recheckDB
+  recheckDB,
 };
