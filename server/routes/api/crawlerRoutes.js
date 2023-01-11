@@ -19,7 +19,7 @@ const {
 // /api/crawler
 // manageArray
 router.post("/upload", upload);
-router.post("/recheck", recheckDB);
+router.get("/recheck", recheckDB);
 router.get("/files", getListFiles);
 router.get("/files/:name", download);
 

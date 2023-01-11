@@ -27,8 +27,7 @@ const getLinks = async () => {
 
 
 const recheckLinks = async () => {
-  const response = await axios.get("/api/crawler/upload");
-  
+  const response = await axios.get("/api/crawler/recheck");
   return response.data;
 };
 
