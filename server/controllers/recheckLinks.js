@@ -5,8 +5,21 @@ const DBLINK = require("../models/Link");
 const http = require("http");
 const https = require("https");
 
+const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
+const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
+const linksFromDB = []; // Array
+
+// Test
+const recheckDB = asyncHandler(async (req, res) => {
+    const linkInDB = await DBLINK.find( !linkStatus == 200);
+    linkInDB.push(linksFromDB)
+
+    await statusCheckFromDB(linksFromDB)
+        .then(()=> {res.json('Done')})
+});
+
 // Step : Checking the repsonse status of the link
-const statusCheckFromDB = asyncHandler(async (req, res) => {
+const statusCheckFromDB = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
   const httpAgent = new http.Agent({ keepalive: true });
@@ -146,7 +159,7 @@ const statusCheckFromDB = asyncHandler(async (req, res) => {
     });
   };
   runningArray(array);
-});
+};
 
 // Step : Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
 const linkDB = async (array) => {
@@ -170,5 +183,5 @@ const linkDB = async (array) => {
 };
 
 module.exports = {
-    statusCheckFromDB
+    recheckDB
 };
