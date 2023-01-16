@@ -21,6 +21,7 @@
     "fetch-retry": "^5.0.3",
     "mongoose": "^6.2.0",
     "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.2",
     "proxy-check": "^1.0.8",
     "stringify": "^5.2.0"
   },

@@ -4,6 +4,10 @@ const { performance } = require("perf_hooks");
 const DBLINK = require("../models/Link");
 const http = require("http");
 const https = require("https");
+// Schedule requests
+// https://www.npmjs.com/package/node-cron
+const cron = require('node-cron');
+
 
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
 const fetchRateLimiting = 2000; // Rate limiting on the status code fetch in milliseconds
@@ -22,6 +26,7 @@ const recheckDB = asyncHandler(async (req, res) => {
   const linkInDB = await DBLINK.where("linkStatus").gte(399);
   linksFromDB.push(linkInDB);
   console.log("Rechecking");
+
   await statusCheckFromDB(linksFromDB);
   res.json("Done");
 });
@@ -39,9 +44,9 @@ const statusCheckFromDB = async (array) => {
     _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
   const runningArray = async (array) => {
     let newArray = array[0];
-    setTimeout(()=>{
-      console.log('Wait more!')
-    }, 1000)
+    setTimeout(() => {
+      console.log("Wait more!");
+    }, 1000);
     await newArray.forEach((linkCrawled, i) => {
       // console.log(linkCrawled.urlTo);
       let linkObjectCrawled = linkCrawled.urlTo;
@@ -57,6 +62,7 @@ const statusCheckFromDB = async (array) => {
           headers: {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
+            "Cache-Control": "max-age=0",
           },
           keepalive: true,
         })
@@ -140,7 +146,7 @@ const statusCheckFromDB = async (array) => {
                   console.log("---    Continuing the check    ---");
                 });
             }, 3000);
-            if (array.length -1  === index) {
+            if (array.length - 1 === index) {
               //   console.dir("Final Array", linkStatus, {
               //     maxArrayLength: maxArrayLength,
               //   });
@@ -176,7 +182,7 @@ const linkDB = async (array) => {
     // console.log("updated");
     // console.log(link);
     index++;
-    if (array.length -1  === index) {
+    if (array.length - 1 === index) {
       console.log("-------------------------------------------");
       console.log("Done with the Database");
       return;
