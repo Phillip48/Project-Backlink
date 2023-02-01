@@ -59,30 +59,29 @@ let format = month + "/" + day + "/" + year;
 
 const manageArray = asyncHandler(async (req, res) => {
   await upload(req, res);
-  if(res){
-    res.sendStatus(200).json('File uploading and being crawled');
+  if (res) {
+    res.sendStatus(200).json("File uploading and being crawled");
   }
-})
+});
 
 const upload = async (req, res) => {
   try {
     await uploadFile(req, res);
     fileName = req.file;
-    // console.log(fileName);
     if (req.file == undefined) {
       return res.status(400).send({ message: "Please upload a file!" });
+    } else {
+      res.status(200).json('File uploading and being crawled');
     }
-    // rename file so it's always the same
-    setTimeout(async function () {
-      fs.rename(
-        `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
-        `${__basedir}/resources/static/assets/uploads/crawlcsv.csv`,
-        (err) => {
-          if (err) throw err;
-          console.log("\nFile Renamed!\n");
-        }
-      );
-    }, 1000);
+    // rename file so it's always the same // Was in a timeout - removed timeout
+    fs.rename(
+      `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
+      `${__basedir}/resources/static/assets/uploads/crawlcsv.csv`,
+      (err) => {
+        if (err) throw err;
+        console.log("\nFile Renamed!\n");
+      }
+    );
     // Read the csv file and get the links
     setTimeout(async function () {
       fs.createReadStream(
@@ -103,17 +102,15 @@ const upload = async (req, res) => {
           CSVCrawlLink();
         });
     }, 1000);
-    if(res){
-      res.sendStatus(200).json('File uploading and being crawled');
-    }
   } catch (err) {
-    console.log(err)
+    console.log(err);
     res.sendStatus(500).send({
       message: `Could not upload the file. ${err}`,
     });
   }
 };
 
+// Not needed
 const getListFiles = (req, res) => {
   const directoryPath = __basedir + "/resources/static/assets/uploads/";
 
@@ -136,7 +133,7 @@ const getListFiles = (req, res) => {
     res.status(200).send(fileInfos);
   });
 };
-
+// Not needed
 const download = (req, res) => {
   const fileName = req.params.name;
   const directoryPath = __basedir + "/resources/static/assets/uploads/";
@@ -156,10 +153,9 @@ const CSVCrawlLink = asyncHandler(async () => {
     crawlerInstance.queue(csvLinks);
     // proxyGenerator();
     // }, 1500);
-  }, 2000);
-  //   let runProxyBoolean = req.params;
+  }, 1000);
 
-  // Step 1-2: Called to get a free proxy
+  // Step : Called to get a free proxy
   const proxyGenerator = () => {
     // Establishing the variables
     let ip_addresses = [];
@@ -531,7 +527,7 @@ const statusCheck = async (array) => {
                   console.log("---    Continuing the check    ---");
                 });
             }, 3000);
-            if (array.length === index) {
+            if (array.length - 1 === index) {
               //   console.dir("Final Array", linkStatus, {
               //     maxArrayLength: maxArrayLength,
               //   });
@@ -592,5 +588,5 @@ module.exports = {
   upload,
   getListFiles,
   download,
-  manageArray
+  manageArray,
 };
