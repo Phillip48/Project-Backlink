@@ -1,3 +1,70 @@
 To do:
 - Imporve the crawler status code (403 sometimes)
 - Keep testing the catch on the fetch to try and get as much accurate links 
+
+
+
+// For crawling sitemaps... Need to work on it
+        if (crawlingURL.includes("/sitemap.xml")) {
+          // https://www.apple.com/sitemap.xml
+          const sitemap = $("loc");
+          for (let link in sitemap) {
+            if (sitemap.hasOwnProperty(link)) {
+              // let logs = link + sitemap[link];
+              let logs2 = sitemap[link].children;
+              sitemapList.push(logs2);
+              let results = sitemapList.filter((element) => {
+                return element !== undefined;
+              });
+              results.forEach((link, index) => {
+                let newLink = link[0];
+                if (newLink == undefined) {
+                  console.log("newLink removed");
+                }
+                console.log(newLink);
+                FinalSitemapList.push(newLink);
+                FinalSitemapList = [...new Set(FinalSitemapList)];
+                FinalSitemapList = FinalSitemapList.filter((element) => {
+                  return element !== undefined;
+                });
+              });
+            }
+          }
+        }
+
+// Not needed
+const getListFiles = (req, res) => {
+  const directoryPath = __basedir + "/resources/static/assets/uploads/";
+
+  fs.readdir(directoryPath, function (err, files) {
+    if (err) {
+      res.status(500).send({
+        message: "Unable to scan files!",
+      });
+    }
+
+    let fileInfos = [];
+
+    files.forEach((file) => {
+      fileInfos.push({
+        name: file,
+        url: baseUrl + file,
+      });
+    });
+
+    res.status(200).send(fileInfos);
+  });
+};
+// Not needed
+const download = (req, res) => {
+  const fileName = req.params.name;
+  const directoryPath = __basedir + "/resources/static/assets/uploads/";
+
+  res.download(directoryPath + fileName, fileName, (err) => {
+    if (err) {
+      res.status(500).send({
+        message: "Could not download the file. " + err,
+      });
+    }
+  });
+};

@@ -4,23 +4,18 @@ const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const request = require("request");
 const proxy_checker = require("proxy-check");
-const newFetch = require("fetch-retry")(fetch);
 const { performance } = require("perf_hooks");
 const fs = require("fs");
 const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
 const multer = require("multer");
-const uploadMulter = multer({ dest: "uploads/" });
 const http = require("http");
 const https = require("https");
 
 // Call functions needed to add to the db
 const {
-  getLinks,
   createLink,
-  updateLinkbyURL,
-  updateLink,
 } = require("../controllers/linkController");
 
 // ===================================== Important ===================================== //
@@ -56,13 +51,6 @@ let format = month + "/" + day + "/" + year;
 
 // ================================== Code =================================================== //
 //  Step : Uploads the csv file and renames it so its alwasy the same. Then reads the file and pulls the link
-
-const manageArray = asyncHandler(async (req, res) => {
-  await upload(req, res);
-  if (res) {
-    res.sendStatus(200).json("File uploading and being crawled");
-  }
-});
 
 const upload = async (req, res) => {
   try {
@@ -110,45 +98,8 @@ const upload = async (req, res) => {
   }
 };
 
-// Not needed
-const getListFiles = (req, res) => {
-  const directoryPath = __basedir + "/resources/static/assets/uploads/";
-
-  fs.readdir(directoryPath, function (err, files) {
-    if (err) {
-      res.status(500).send({
-        message: "Unable to scan files!",
-      });
-    }
-
-    let fileInfos = [];
-
-    files.forEach((file) => {
-      fileInfos.push({
-        name: file,
-        url: baseUrl + file,
-      });
-    });
-
-    res.status(200).send(fileInfos);
-  });
-};
-// Not needed
-const download = (req, res) => {
-  const fileName = req.params.name;
-  const directoryPath = __basedir + "/resources/static/assets/uploads/";
-
-  res.download(directoryPath + fileName, fileName, (err) => {
-    if (err) {
-      res.status(500).send({
-        message: "Could not download the file. " + err,
-      });
-    }
-  });
-};
-
 const CSVCrawlLink = asyncHandler(async () => {
-  // Step 3 calls the crawl as soon as the function is called
+  // Step : calls the crawl as soon as the function is called
   setTimeout(async function () {
     crawlerInstance.queue(csvLinks);
     // proxyGenerator();
@@ -218,8 +169,7 @@ const CSVCrawlLink = asyncHandler(async () => {
         });
     });
   };
-  // Step 4
-  // Create an instance of a new crawler
+  // Step : Create an instance of a new crawler
   const crawlerInstance = new Crawler({
     headers: {
       // The User-Agent request header passes information related to the identification of application type, operating system, software, and its version, and allows for data target to decide what type of HTML layout to use in response i.e. mobile, tablet, or pc.
@@ -256,35 +206,6 @@ const CSVCrawlLink = asyncHandler(async () => {
         console.log("URL Path:", pathURL);
         // Looking for href in the HTML
         const $ = res.$;
-        // ========================================================================== //
-        // For crawling sitemaps... Need to work on it
-        if (crawlingURL.includes("/sitemap.xml")) {
-          // https://www.apple.com/sitemap.xml
-          const sitemap = $("loc");
-          for (let link in sitemap) {
-            if (sitemap.hasOwnProperty(link)) {
-              // let logs = link + sitemap[link];
-              let logs2 = sitemap[link].children;
-              sitemapList.push(logs2);
-              let results = sitemapList.filter((element) => {
-                return element !== undefined;
-              });
-              results.forEach((link, index) => {
-                let newLink = link[0];
-                if (newLink == undefined) {
-                  console.log("newLink removed");
-                }
-                console.log(newLink);
-                FinalSitemapList.push(newLink);
-                FinalSitemapList = [...new Set(FinalSitemapList)];
-                FinalSitemapList = FinalSitemapList.filter((element) => {
-                  return element !== undefined;
-                });
-              });
-            }
-          }
-        }
-        // ========================================================================== //
         const anchorTag = $("a");
         anchorTag.each(function () {
           // For the link
@@ -355,8 +276,7 @@ const linkConverter = async (array) => {
   await array.forEach((linkCrawled) => {
     let newLinkCrawled = linkCrawled.link;
 
-    if (array.length <= forEachCount) {
-      // console.log("Total number removed:", linksRemoved);
+    if (array.length - 1 == forEachCount) {
       return;
     } else if (
       !newLinkCrawled.startsWith("/") &&
@@ -410,27 +330,24 @@ const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
   console.log("Status check array length", array.length);
+  // Websockets 
   const httpAgent = new http.Agent({ keepalive: true });
   const httpsAgent = new https.Agent({ keepAlive: true });
   httpAgent.maxSockets = 10;
   httpsAgent.maxSockets = 10;
   const agent = (_parsedURL) =>
     _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+  // Callback function
   const runningArray = async (array) => {
-    // console.log("Array length", array.length);
     await array.forEach((linkCrawled, i) => {
       const startTime = performance.now();
       let newLinkCrawled = linkCrawled.link;
 
       // How long you want the delay to be, measured in milliseconds.
       setTimeout(async () => {
-        // Something you want delayed.
-        // newFetch or fetch
         fetch(newLinkCrawled, {
           method: "GET",
-          // pool: httpAgent,
           agent,
-          // These headers will allow for accurate status code and not get a 403
           headers: {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
@@ -536,7 +453,6 @@ const statusCheck = async (array) => {
               );
               console.log("Final array length", linkStatus.length);
               linkDB(linkStatus);
-              // writeToJSON(linkStatus);
             } else {
               // Run the fetch on the array thats being passed in again now that the error should be resolved
               runningArray(array);
