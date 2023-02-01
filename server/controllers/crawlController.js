@@ -423,7 +423,7 @@ const statusCheck = async (array) => {
       let newLinkCrawled = linkCrawled.link;
 
       // How long you want the delay to be, measured in milliseconds.
-      setTimeout(function () {
+      setTimeout(async () => {
         // Something you want delayed.
         // newFetch or fetch
         fetch(newLinkCrawled, {
@@ -451,7 +451,6 @@ const statusCheck = async (array) => {
               statusText: response.statusText,
               linkFollow: linkCrawled.linkFollow,
             });
-
             index++;
             if (array.length - 1 === index) {
               const endTime = performance.now();
@@ -469,7 +468,7 @@ const statusCheck = async (array) => {
             console.log("---    Error    ---");
             console.error(error);
             console.log("---    Retrying the fetch    ---");
-            setTimeout(async function () {
+            setTimeout(async () => {
               fetch(newLinkCrawled, {
                 method: "GET",
                 pool: httpAgent,
@@ -526,7 +525,7 @@ const statusCheck = async (array) => {
                   index++;
                   console.log("---    Continuing the check    ---");
                 });
-            }, 3000);
+            }, i * 2000);
             if (array.length - 1 === index) {
               //   console.dir("Final Array", linkStatus, {
               //     maxArrayLength: maxArrayLength,
