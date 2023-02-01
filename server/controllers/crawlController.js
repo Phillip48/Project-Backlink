@@ -501,7 +501,4 @@ const linkDB = async (array) => {
 module.exports = {
   CSVCrawlLink,
   upload,
-  getListFiles,
-  download,
-  manageArray,
 };
