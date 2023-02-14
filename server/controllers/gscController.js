@@ -48,7 +48,7 @@ const upload = async (req, res) => {
       res.status(200).json("File uploading and being crawled");
     }
     // rename file so it's always the same // Was in a timeout - removed timeout
-    fs.rename(
+    await fs.rename(
       `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
       `${__basedir}/resources/static/assets/uploads/gsccrawl.csv`,
       (err) => {
@@ -57,7 +57,7 @@ const upload = async (req, res) => {
       }
     );
     // Read the csv file and get the links
-    setTimeout(async function () {
+    await setTimeout(async function () {
       fs.createReadStream(
         __basedir + `/resources/static/assets/uploads/gsccrawl.csv`
       )
@@ -73,8 +73,8 @@ const upload = async (req, res) => {
         .on("end", function () {
           console.log("Links from reader:", csvLinks);
           console.log("CSV scan finished");
-          CSVCrawlLink();
         });
+        CSVCrawlLink();
     }, 1000);
   } catch (err) {
     console.log(err);
@@ -172,6 +172,7 @@ const CSVCrawlLink = asyncHandler(async () => {
         );
         console.log("-------------------------------------------");
         linkConverter(crawledLinks);
+        gscResults(formattedLinks);
       }
       done();
     },
@@ -244,8 +245,22 @@ const linkConverter = async (array) => {
       forEachCount++;
     }
   });
-  console.log(formattedLinks);
+  
 };
+
+const gscResults = (array) => {
+  console.log(array)
+  // let newData = JSON.stringify(array);
+  // fs.writeFile(`${__basedir}/resources/static/assets/uploads/gsclinks.csv`, newData, (err) => {
+  //   if (err)
+  //     console.log(err);
+  //   else {
+  //     console.log("File written successfully\n");
+  //     console.log(fs.readFileSync("gsclinks.csv", "utf8"));
+  //   }
+  // });
+
+}
 
 module.exports = {
   CSVCrawlLink,
