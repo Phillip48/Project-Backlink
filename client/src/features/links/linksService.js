@@ -17,6 +17,18 @@ const crawlSite = async (formData) => {
     });
   return response.data;
 };
+const gscCrawl = async (formData) => {
+  // console.log("csvFile", formData);
+  const headers = {
+    "Content-Type": "multipart/form-data",
+  };
+  const response = await axios
+    .post("/api/crawler/gsc", formData, headers)
+    .then((res) => {
+      console.log(res);
+    });
+  return response.data;
+};
 
 // Get user projects
 const getLinks = async () => {
@@ -56,6 +68,7 @@ const deleteProject = async (projectId, token) => {
 const linksService = {
   crawlSite,
   getLinks,
+  gscCrawl,
   recheckLinks,
   deleteProject,
   // updateProject
