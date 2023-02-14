@@ -29,7 +29,7 @@ export const crawlLink = createAsyncThunk(
 
 // crawl gsc links
 export const gscCrawlLink = createAsyncThunk(
-  "links/crawl",
+  "links/gsccrawl",
   async (linksData, thunkAPI) => {
     try {
       return await linksService.gscCrawl(linksData);

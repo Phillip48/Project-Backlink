@@ -6,7 +6,7 @@ import {
   gscCrawlLink,
 } from "../../src/features/links/linksSlice";
 
-function gscCrawlPage() {
+function GscCrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
 
   const dispatch = useDispatch();
@@ -78,4 +78,4 @@ function gscCrawlPage() {
   );
 }
 
-export default gscCrawlPage;
+export default GscCrawlPage;
