@@ -1,6 +1,7 @@
 import logo from "./logo.svg";
 import "./App.css";
 import CrawlPage from "../src/pages/Crawl";
+import gscCrawlPage from "../src/pages/gscCrawl";
 import LinksPage from "../src/pages/Links";
 // import NotFoundPage from "../src/pages/404Page";
 import Nav from "../src/components/nav/index";
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<CrawlPage />} />
             <Route path="/Links" element={<LinksPage />} />
+            <Route path="/gscLinks" element={<gscCrawlPage />} />
           </Routes>
           {/* Renders the footer to the bottom of each page */}
           {/* <Footer /> */}

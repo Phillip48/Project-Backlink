@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
 import {
-  crawlLink,
+  gscCrawlLink,
 } from "../../src/features/links/linksSlice";
 
-function CrawlPage() {
+function gscCrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
 
   const dispatch = useDispatch();
@@ -27,7 +27,7 @@ function CrawlPage() {
     let formData = new FormData();
     formData.append('csvFile', inputFile);
     event.preventDefault();
-    dispatch(crawlLink(formData));
+    dispatch(gscCrawlLink(formData));
     // clear
     setFormState({});
     // window.location.reload();
@@ -78,4 +78,4 @@ function CrawlPage() {
   );
 }
 
-export default CrawlPage;
+export default gscCrawlPage;

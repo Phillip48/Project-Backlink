@@ -97,6 +97,9 @@ function CrawlPage() {
         </div>
       </div>
       <div className="crawl_link_links">
+        <a href="/gscLinks">Upload a GSC CSV File</a>
+      </div>
+      <div className="crawl_link_links">
         <a href="/links">Crawled Links - Click Here!</a>
       </div>
       <div className="crawl_link_links">
