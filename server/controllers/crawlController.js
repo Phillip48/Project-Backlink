@@ -350,7 +350,9 @@ const statusCheck = async (array) => {
           agent,
           headers: {
             "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
+              // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36:",
+              // "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
           },
           keepalive: true,
           // maxSockets: 15,
@@ -360,6 +362,13 @@ const statusCheck = async (array) => {
           path: pathURL,
         })
           .then((response) => {
+            if(response.status > 399 && response.status < 500){
+              console.log('Client Error', {
+                urlTo: newLinkCrawled,
+                linkStatus: response.status,
+                statusText: response.statusText,
+              })
+            }
             linkStatus.push({
               urlFrom: linkCrawled.URLFrom,
               urlTo: newLinkCrawled,
@@ -377,7 +386,6 @@ const statusCheck = async (array) => {
               );
               console.log("Final array length", linkStatus.length);
               linkDB(linkStatus);
-              // writeToJSON(linkStatus);
             }
           })
           // If theres an error run this code
@@ -392,7 +400,8 @@ const statusCheck = async (array) => {
                 // These headers will allow for accurate status code and not get a 403
                 headers: {
                   "User-Agent":
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+                    "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+                    // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
                 },
                 keepalive: true,
                 // maxSockets: 15,
@@ -442,11 +451,10 @@ const statusCheck = async (array) => {
                   index++;
                   console.log("---    Continuing the check    ---");
                 });
-            }, i * 2000);
+            }, i = 1 ? i * fetchRateLimiting : 1 * fetchRateLimiting);
             if (array.length - 1 === index) {
               //   console.dir("Final Array", linkStatus, {
-              //     maxArrayLength: maxArrayLength,
-              //   });
+              //     maxArrayLength: maxArrayLength});
               const endTime = performance.now();
               console.log(
                 `Status check took ${endTime - startTime} milliseconds.`
