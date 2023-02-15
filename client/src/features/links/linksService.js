@@ -27,7 +27,7 @@ const gscCrawl = async (formData) => {
     .then((res) => {
       console.log(res);
     });
-  return response.data;
+  return response;
 };
 
 // Get user projects
@@ -50,20 +50,6 @@ const deleteProject = async (projectId, token) => {
 
   return response.data;
 };
-
-// Update projects
-// const updateProject = async (projectId, token) => {
-//   const config = {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//     },
-//   }
-//   let projectIdReal = projectId.projectId
-
-//   const response = await axios.put(API_URL + 'projects/' + projectIdReal, projectId, config)
-
-//   return response.data
-// }
 
 const linksService = {
   crawlSite,

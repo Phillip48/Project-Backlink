@@ -163,26 +163,13 @@ export const linksSlice = createSlice({
       .addCase(gscCrawlLink.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.links.push(action.payload);
+        state.links = action.payload;
       })
       .addCase(gscCrawlLink.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
       })
-      // .addCase(createLink.pending, (state) => {
-      //   state.isLoading = true
-      // })
-      // .addCase(createLink.fulfilled, (state, action) => {
-      //   state.isLoading = false
-      //   state.isSuccess = true
-      //   state.links.push(action.payload)
-      // })
-      // .addCase(createLink.rejected, (state, action) => {
-      //   state.isLoading = false
-      //   state.isError = true
-      //   state.message = action.payload
-      // })
       .addCase(recheckLinks.pending, (state) => {
         state.isLoading = true;
       })

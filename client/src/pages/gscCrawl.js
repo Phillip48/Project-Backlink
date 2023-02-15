@@ -8,24 +8,30 @@ import {
 
 function GscCrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
+  const { gscLinks } = useSelector((state) => state.links);
 
   const dispatch = useDispatch();
 
+  const ifLinks = () => {
+    if (gscLinks) {
+      console.log(gscLinks);
+    } else {
+      return "No links";
+    }
+  };
+
   const [inputFile, setInputFile] = useState("");
-  const [inputFileName, setInputFileName] = useState("");
   const [formState, setFormState] = useState("");
-  // const { csvFile } = formState;
 
   const handleChange = (event) => {
     setInputFile(event.target.files[0]);
-    setInputFileName(event.target.files[0].name);
     setFormState({ ...formState, [event.target.name]: event.target.value });
   };
 
   // submit form
   const handleFormSubmit = async (event) => {
     let formData = new FormData();
-    formData.append('csvFile', inputFile);
+    formData.append("csvFile", inputFile);
     event.preventDefault();
     dispatch(gscCrawlLink(formData));
     // clear
@@ -66,7 +72,8 @@ function GscCrawlPage() {
               accept=".csv"
               value={formState.csvFile}
               onChange={handleChange}
-              webkitdirectory multiple
+              webkitdirectory
+              multiple
             />
             <button type="submit" onClick={handleFormSubmit}>
               Submit
@@ -74,6 +81,7 @@ function GscCrawlPage() {
           </form>
         </div>
       </div>
+      <div>{ifLinks()}</div>
     </section>
   );
 }

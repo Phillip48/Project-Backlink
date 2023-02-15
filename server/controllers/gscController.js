@@ -74,7 +74,7 @@ const upload = async (req, res) => {
         });
 
       const CSVCrawlLink = asyncHandler(async () => {
-        console.log(csvLinks)
+        console.log(csvLinks);
         let crawlerCount = 0;
         // Step : calls the crawl as soon as the function is called
         setTimeout(async function () {
@@ -126,7 +126,6 @@ const upload = async (req, res) => {
                 let link = $(this).attr("href");
                 // To see things link follow, no follow etc...
                 let linkText = $(this).text();
-                let linkRel = $(this).attr("rel");
                 let anchorObj;
                 // Checking text to see if there are any line breaks with the anchor text and trims whitespace
                 if (
@@ -136,23 +135,11 @@ const upload = async (req, res) => {
                   linkText = linkText.replace(/[\r\n\t]/gm, "");
                   linkText = linkText.trim();
                 }
-                if (linkRel == "follow" || linkRel == "nofollow") {
-                  anchorObj = {
-                    URLFrom: crawlingURL,
-                    link: link,
-                    text: linkText,
-                    linkFollow: linkRel,
-                    // dateFound: currentDate
-                  };
-                } else {
-                  anchorObj = {
-                    URLFrom: crawlingURL,
-                    link: link,
-                    text: linkText,
-                    //   linkFollow: "No link Rel",
-                    // dateFound: currentDate
-                  };
-                }
+                anchorObj = {
+                  URLFrom: crawlingURL,
+                  link: link,
+                  text: linkText,
+                };
                 crawledLinks.push(anchorObj);
               });
               const endTime = performance.now();
@@ -161,7 +148,7 @@ const upload = async (req, res) => {
                   endTime - startTime
                 } milliseconds.`
               );
-              crawlerCount ++;
+              crawlerCount++;
               console.log("-------------------------------------------");
               if (csvLinks.length == crawlerCount) {
                 linkConverter(crawledLinks);
@@ -172,6 +159,7 @@ const upload = async (req, res) => {
         });
       });
       CSVCrawlLink();
+      
       const linkConverter = async (array) => {
         console.log("---    Converting Links...    ---");
         let forEachCount = 0;
@@ -187,10 +175,7 @@ const upload = async (req, res) => {
         await newArray.forEach((linkCrawled) => {
           let newLinkCrawled = linkCrawled.link;
 
-          if (
-            newArray.length - 1 == forEachCount ||
-            newArray.length == forEachCount
-          ) {
+          if (newArray.length - 1 == forEachCount) {
             res.status(200).send(formattedLinks);
             return;
           } else if (
