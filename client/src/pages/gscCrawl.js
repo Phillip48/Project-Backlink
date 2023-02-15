@@ -8,13 +8,13 @@ import {
 
 function GscCrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
-  const { gscLinks } = useSelector((state) => state.links);
+  const { links } = useSelector((state) => state.links);
 
   const dispatch = useDispatch();
 
   const ifLinks = () => {
-    if (gscLinks) {
-      console.log(gscLinks);
+    if (links) {
+      console.log(links);
     } else {
       return "No links";
     }

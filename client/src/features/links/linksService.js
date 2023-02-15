@@ -2,11 +2,7 @@ import axios from "axios";
 
 const API_URL = "/api/get-link/";
 
-// upload - to upload csv and crawl
-
-// Create new project
 const crawlSite = async (formData) => {
-  // console.log("csvFile", formData);
   const headers = {
     "Content-Type": "multipart/form-data",
   };
@@ -18,7 +14,6 @@ const crawlSite = async (formData) => {
   return response.data;
 };
 const gscCrawl = async (formData) => {
-  // console.log("csvFile", formData);
   const headers = {
     "Content-Type": "multipart/form-data",
   };
@@ -30,7 +25,6 @@ const gscCrawl = async (formData) => {
   return response;
 };
 
-// Get user projects
 const getLinks = async () => {
   const response = await axios.get(API_URL + "links");
   
@@ -43,21 +37,11 @@ const recheckLinks = async () => {
   return response.data;
 };
 
-// Delete user project
-const deleteProject = async (projectId, token) => {
-  console.log(projectId);
-  const response = await axios.delete(API_URL + "links/" + projectId);
-
-  return response.data;
-};
-
 const linksService = {
   crawlSite,
   getLinks,
   gscCrawl,
-  recheckLinks,
-  deleteProject,
-  // updateProject
+  recheckLinks
 };
 
 export default linksService;

@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import linksService from "./linksService";
 
 const initialState = {
-  projects: [],
+  links: [],
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -44,25 +44,6 @@ export const gscCrawlLink = createAsyncThunk(
     }
   }
 );
-
-// Create new Project
-// export const createLink = createAsyncThunk(
-//   'links/create',
-//   async (linksData, thunkAPI) => {
-//     try {
-//       return await linksService.createLink(linksData)
-//     } catch (error) {
-//       const message =
-//         (error.response &&
-//           error.response.data &&
-//           error.response.data.message) ||
-//         error.message ||
-//         error.toString()
-//       return thunkAPI.rejectWithValue(message)
-//     }
-//   }
-// )
-
 // Get user projects
 export const getLinks = createAsyncThunk(
   "links/getAll",
@@ -117,24 +98,6 @@ export const deleteLinks = createAsyncThunk(
   }
 );
 
-// update user send
-// export const updateProject = createAsyncThunk(
-//   'projects/update',
-//   async (id, thunkAPI) => {
-//     try {
-//       const token = thunkAPI.getState().auth.user.token
-//       return await linksService.updateProject(id, token)
-//     } catch (error) {
-//       const message =
-//         (error.response &&
-//           error.response.data &&
-//           error.response.data.message) ||
-//         error.message ||
-//         error.toString()
-//       return thunkAPI.rejectWithValue(message)
-//     }
-//   }
-// )
 
 export const linksSlice = createSlice({
   name: "links",
@@ -150,6 +113,8 @@ export const linksSlice = createSlice({
       .addCase(crawlLink.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
+        console.log(state)
+        console.log(action.payload)
         state.links.push(action.payload);
       })
       .addCase(crawlLink.rejected, (state, action) => {
@@ -163,7 +128,7 @@ export const linksSlice = createSlice({
       .addCase(gscCrawlLink.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.links = action.payload;
+        state.links.push(action.payload);
       })
       .addCase(gscCrawlLink.rejected, (state, action) => {
         state.isLoading = false;
