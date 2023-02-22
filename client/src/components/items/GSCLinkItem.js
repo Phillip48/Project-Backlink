@@ -4,7 +4,7 @@ import Spinner from "../Spinner";
 import linksService from "../../features/links/linksService";
 
 function GSCLinkItem({ gscLink }) {
-  console.log('Inside gscLink item', gscLink)
+  // console.log('Inside gscLink item', gscLink)
   //   const dispatch = useDispatch();
   // const { isLoading, isError, message } = useSelector((state) => state.links);
 
@@ -21,7 +21,7 @@ function GSCLinkItem({ gscLink }) {
   return (
     <section className="links_item_div">
       <p className="links_item">
-        urlFrom: <b>{gscLink.urlFrom}</b>
+        urlFrom: <b>{gscLink.URLFrom}</b>
       </p>
       <p className="links_item">
         link to: <b>{gscLink.link}</b>

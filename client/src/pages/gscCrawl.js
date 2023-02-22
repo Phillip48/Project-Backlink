@@ -6,6 +6,7 @@ import { gscCrawlLink } from "../../src/features/gscLinks/gscLinksSlice";
 import GSCLinkItem from "../components/items/gscLinkItem";
 
 function GscCrawlPage() {
+  let dataLinksLength;
   const { isLoading, isError, message } = useSelector((state) => state.links);
   const { gscLinks } = useSelector((state) => state.gscLinks);
 
@@ -16,21 +17,18 @@ function GscCrawlPage() {
   const [active, setActive] = useState("none");
 
   const ifLinks = () => {
+    let dataLinks = gscLinks.data;
     if (active === "all-links") {
-      if (gscLinks) {
-        let dataLinks = gscLinks.data;
-        // forEach not working
-        setTimeout(()=> {
-          console.log('5 Second timeout');
-          console.log(dataLinks);
-          const getLinks = dataLinks.forEach((gscLink) => (
-            <GSCLinkItem key={gscLink.id} gscLink={gscLink} />
-          ));
-          return getLinks;
-        }, 5000)
+      if (dataLinks != undefined) {
+        dataLinksLength = dataLinks.length;
+        console.log(dataLinks);
+        const getLinks = dataLinks.map((gscLinks) => (
+          <GSCLinkItem key={gscLinks.id} gscLink={gscLinks} />
+        ));
+        return getLinks;
       }
     } else {
-      return "No links";
+      return <></>;
     }
   };
 
@@ -41,7 +39,7 @@ function GscCrawlPage() {
 
   // submit form
   const handleFormSubmit = async (event) => {
-    setActive('all-links')
+    setActive("all-links");
     let formData = new FormData();
     formData.append("csvFile", inputFile);
     event.preventDefault();
