@@ -11,19 +11,19 @@ const crawlSite = async (formData) => {
     .then((res) => {
       console.log(res);
     });
-  return response.data;
-};
-const gscCrawl = async (formData) => {
-  const headers = {
-    "Content-Type": "multipart/form-data",
-  };
-  const response = await axios
-    .post("/api/crawler/gsc", formData, headers)
-    .then((res) => {
-      console.log(res);
-    });
   return response;
 };
+// const gscCrawl = async (formData) => {
+//   const headers = {
+//     "Content-Type": "multipart/form-data",
+//   };
+//   const response = await axios
+//     .post("/api/crawler/gsc", formData, headers)
+//     .then((res) => {
+//       console.log(res);
+//     });
+//   return response;
+// };
 
 const getLinks = async () => {
   const response = await axios.get(API_URL + "links");
@@ -40,7 +40,7 @@ const recheckLinks = async () => {
 const linksService = {
   crawlSite,
   getLinks,
-  gscCrawl,
+  // gscCrawl,
   recheckLinks
 };
 

@@ -2,26 +2,37 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
-import {
-  gscCrawlLink,
-} from "../../src/features/links/linksSlice";
+import { gscCrawlLink } from "../../src/features/gscLinks/gscLinksSlice";
+import GSCLinkItem from "../components/items/gscLinkItem";
 
 function GscCrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
-  const { links } = useSelector((state) => state.links);
+  const { gscLinks } = useSelector((state) => state.gscLinks);
 
   const dispatch = useDispatch();
 
+  const [inputFile, setInputFile] = useState("");
+  const [formState, setFormState] = useState("");
+  const [active, setActive] = useState("none");
+
   const ifLinks = () => {
-    if (links) {
-      console.log(links);
+    if (active === "all-links") {
+      if (gscLinks) {
+        let dataLinks = gscLinks.data;
+        // forEach not working
+        setTimeout(()=> {
+          console.log('5 Second timeout');
+          console.log(dataLinks);
+          const getLinks = dataLinks.forEach((gscLink) => (
+            <GSCLinkItem key={gscLink.id} gscLink={gscLink} />
+          ));
+          return getLinks;
+        }, 5000)
+      }
     } else {
       return "No links";
     }
   };
-
-  const [inputFile, setInputFile] = useState("");
-  const [formState, setFormState] = useState("");
 
   const handleChange = (event) => {
     setInputFile(event.target.files[0]);
@@ -30,6 +41,7 @@ function GscCrawlPage() {
 
   // submit form
   const handleFormSubmit = async (event) => {
+    setActive('all-links')
     let formData = new FormData();
     formData.append("csvFile", inputFile);
     event.preventDefault();

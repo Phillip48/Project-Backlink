@@ -28,22 +28,22 @@ export const crawlLink = createAsyncThunk(
 );
 
 // crawl gsc links
-export const gscCrawlLink = createAsyncThunk(
-  "links/gsccrawl",
-  async (linksData, thunkAPI) => {
-    try {
-      return await linksService.gscCrawl(linksData);
-    } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
-    }
-  }
-);
+// export const gscCrawlLink = createAsyncThunk(
+//   "links/gsccrawl",
+//   async (linksData, thunkAPI) => {
+//     try {
+//       return await linksService.gscCrawl(linksData);
+//     } catch (error) {
+//       const message =
+//         (error.response &&
+//           error.response.data &&
+//           error.response.data.message) ||
+//         error.message ||
+//         error.toString();
+//       return thunkAPI.rejectWithValue(message);
+//     }
+//   }
+// );
 // Get user projects
 export const getLinks = createAsyncThunk(
   "links/getAll",
@@ -122,19 +122,19 @@ export const linksSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       })
-      .addCase(gscCrawlLink.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(gscCrawlLink.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.links.push(action.payload);
-      })
-      .addCase(gscCrawlLink.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.message = action.payload;
-      })
+      // .addCase(gscCrawlLink.pending, (state) => {
+      //   state.isLoading = true;
+      // })
+      // .addCase(gscCrawlLink.fulfilled, (state, action) => {
+      //   state.isLoading = false;
+      //   state.isSuccess = true;
+      //   state.links = state.links.concat(action.payload);
+      // })
+      // .addCase(gscCrawlLink.rejected, (state, action) => {
+      //   state.isLoading = false;
+      //   state.isError = true;
+      //   state.message = action.payload;
+      // })
       .addCase(recheckLinks.pending, (state) => {
         state.isLoading = true;
       })
@@ -176,22 +176,6 @@ export const linksSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       });
-    //
-    // .addCase(updateProject.pending, (state) => {
-    //   state.isLoading = true
-    // })
-    // .addCase(updateProject.fulfilled, (state, action) => {
-    //   state.isLoading = false
-    //   state.isSuccess = true
-    //   state.projects = state.projects.filter(
-    //     (project) => project._id !== action.payload.id
-    //   )
-    // })
-    // .addCase(updateProject.rejected, (state, action) => {
-    //   state.isLoading = false
-    //   state.isError = true
-    //   state.message = action.payload
-    // })
   },
 });
 
