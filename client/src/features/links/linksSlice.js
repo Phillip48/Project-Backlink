@@ -113,8 +113,7 @@ export const linksSlice = createSlice({
       .addCase(crawlLink.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        console.log(state)
-        console.log(action.payload)
+        // console.log(state);
         state.links.push(action.payload);
       })
       .addCase(crawlLink.rejected, (state, action) => {

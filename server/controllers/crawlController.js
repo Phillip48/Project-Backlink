@@ -12,17 +12,20 @@ const uploadFile = require("../middleware/upload");
 const multer = require("multer");
 const http = require("http");
 const https = require("https");
+const HttpsProxyAgent = require('https-proxy-agent');
+const { RateLimit } = require("async-sema");
+const limiter = RateLimit(1);
 
 // Call functions needed to add to the db
-const {
-  createLink,
-} = require("../controllers/linkController");
+const { createLink } = require("../controllers/linkController");
+const { setMaxListeners } = require("events");
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
 const fetchRateLimiting = 1000; // Rate limiting on the status code fetch in milliseconds
 const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 // ===================================================================================== //
+let crawledLinksCount = 0;
 // Host URL and URL Protocol
 let urlProtocol;
 let hostUrl;
@@ -59,7 +62,7 @@ const upload = async (req, res) => {
     if (req.file == undefined) {
       return res.status(400).send({ message: "Please upload a file!" });
     } else {
-      res.status(200).json('File uploading and being crawled');
+      res.status(200).json("File uploading and being crawled");
     }
     // rename file so it's always the same // Was in a timeout - removed timeout
     fs.rename(
@@ -99,11 +102,12 @@ const upload = async (req, res) => {
 };
 
 const CSVCrawlLink = asyncHandler(async () => {
+  let csvCount = 0;
   // Step : calls the crawl as soon as the function is called
   setTimeout(async function () {
-    crawlerInstance.queue(csvLinks);
-    // proxyGenerator();
-    // }, 1500);
+    limiter();
+    proxyGenerator();
+    // crawlerInstance.queue(csvLinks);
   }, 1000);
 
   // Step : Called to get a free proxy
@@ -153,15 +157,16 @@ const CSVCrawlLink = asyncHandler(async () => {
       proxy_checker(proxyCheck)
         .then((res) => {
           console.log("Good Proxy", res); // true
-          setTimeout(function () {
+          // setTimeout(function () {
             // console.log(csvLinks);
-            csvLinks.forEach((link) => {
-              crawlerInstance.queue({
-                uri: link,
-                proxy: proxyRotation,
-              });
-            });
-          }, 0);
+            // csvLinks.forEach((link) => {
+            //   crawlerInstance.queue({
+            //     uri: link,
+            //     proxy: proxyRotation,
+            //   });
+            // });
+          // }, 0);
+          crawlerInstance.queue(csvLinks);
         })
         .catch((error) => {
           console.error("error", error); // ECONNRESET
@@ -192,6 +197,7 @@ const CSVCrawlLink = asyncHandler(async () => {
         console.log("---    Error    ---", error);
         // proxyGenerator();
       } else {
+        csvCount++;
         const startTime = performance.now();
         hostUrl = res.request.req.protocol + "//" + res.request.host;
         rawHostUrl = res.request.host;
@@ -207,7 +213,7 @@ const CSVCrawlLink = asyncHandler(async () => {
         // Looking for href in the HTML
         const $ = res.$;
         const anchorTag = $("a");
-        anchorTag.each(function () {
+        anchorTag.each(async function () {
           // For the link
           let link = $(this).attr("href");
           // To see things link follow, no follow etc...
@@ -241,16 +247,60 @@ const CSVCrawlLink = asyncHandler(async () => {
           }
           crawledLinks.push(anchorObj);
         });
+
+        const filterLinks = async () => {
+          let crawledNewLink;
+          if ((csvLinks.length - 1 == csvCount)) {
+            console.log('Working link check')
+            await limiter();
+            crawledLinks.filter(async function (element) {
+              if (element.link == undefined) {
+                console.log("Removed undefined");
+              }
+              return element.link !== undefined;
+            });
+
+            crawledLinks.forEach(async (element) => {
+              crawledNewLink = element.link;
+              if (crawledLinks.length -1  == crawledLinksCount) {
+                await limiter();
+                linkConverter(crawledLinks);
+                // statusCheck(formattedLinks);
+                return;
+              }
+              if (element.link == undefined) {
+                console.log("Removed undefined");
+                return element.link !== undefined;
+              }
+              if (
+                crawledNewLink.startsWith("#") ||
+                crawledNewLink.startsWith(" #")
+              ) {
+                console.log("Removed #", crawledNewLink);
+                crawledLinksCount++;
+              } else if (
+                !crawledNewLink.startsWith("/") &&
+                !crawledNewLink.startsWith("h") &&
+                !crawledNewLink.startsWith("u")
+              ) {
+                console.log("link removed", crawledNewLink);
+                crawledLinksCount++;
+              } else {
+                crawledLinksCount++;
+              }
+            });
+          }
+        };
+        filterLinks();
         const endTime = performance.now();
         console.log(
           `Inital crawl for ${hostUrl} took ${
             endTime - startTime
           } milliseconds.`
         );
+
         console.log("-------------------------------------------");
         // Passes array into function to convert it. Then takes the formatted links array and checks the link status putting it into an object
-        linkConverter(crawledLinks);
-        statusCheck(formattedLinks);
         // After StatusCheck is done it will check the DB to see if the links in the array are in there. If its not create the link in the array.
       }
       done();
@@ -265,36 +315,23 @@ const linkConverter = async (array) => {
   console.log("---    Converting Links...    ---");
   let forEachCount = 0;
 
-  // Remove anything undefined from the array if there is something before the loop
-  array = array.filter(function (element) {
-    if (element.link == undefined) {
-      console.log("Removed undefined");
-    }
-    return element.link !== undefined;
-  });
-
   await array.forEach((linkCrawled) => {
     let newLinkCrawled = linkCrawled.link;
 
-    if (array.length - 1 == forEachCount) {
+    if (array.length - 1 == forEachCount && crawledLinks.length - 1  == crawledLinksCount) {
+      statusCheck(formattedLinks);
       return;
-    } else if (
-      !newLinkCrawled.startsWith("/") &&
-      !newLinkCrawled.startsWith("h") &&
-      !newLinkCrawled.startsWith("u")
-    ) {
+    } else if (newLinkCrawled.startsWith("#")) {
       console.log("link removed", newLinkCrawled);
+      forEachCount++;
     } else if (newLinkCrawled && newLinkCrawled.startsWith("//")) {
       let pulledLink = newLinkCrawled;
-      // console.log("Linked changed:", pulledLink);
-      // pulledLink = newLinkCrawled.slice(2);
       pulledLink = urlProtocol + pulledLink;
       formattedLinks.push({
         URLFrom: linkCrawled.URLFrom,
         link: pulledLink,
         text: linkCrawled.text,
         linkFollow: linkCrawled.linkFollow,
-        // dateFound: linkCrawled.dateFound
       });
       forEachCount++;
     } else if (
@@ -309,7 +346,6 @@ const linkConverter = async (array) => {
         link: pulledLink,
         text: linkCrawled.text,
         linkFollow: linkCrawled.linkFollow,
-        // dateFound: linkCrawled.dateFound
       });
       forEachCount++;
     } else {
@@ -318,7 +354,6 @@ const linkConverter = async (array) => {
         link: newLinkCrawled,
         text: linkCrawled.text,
         linkFollow: linkCrawled.linkFollow,
-        // dateFound: linkCrawled.dateFound
       });
       forEachCount++;
     }
@@ -330,54 +365,97 @@ const statusCheck = async (array) => {
   console.log("---    Status Check...    ---");
   let index = 0;
   console.log("Status check array length", array.length);
-  // Websockets 
+  // Websockets
   const httpAgent = new http.Agent({ keepalive: true });
   const httpsAgent = new https.Agent({ keepAlive: true });
-  httpAgent.maxSockets = 10;
-  httpsAgent.maxSockets = 10;
+  httpAgent.maxSockets = 5;
+  httpsAgent.maxSockets = 5;
+  const schemeHeader = (_parsedURL) => {
+    _parsedURL.protocol == "http:" ? httpAgent : httpsAgent
+  }
   const agent = (_parsedURL) =>
     _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+  const proxyAgent = new HttpsProxyAgent(`http://${proxyHost}:${proxyPort}`);
   // Callback function
   const runningArray = async (array) => {
-    await array.forEach((linkCrawled, i) => {
+    await array.forEach(async (linkCrawled, i) => {
+      await limiter();
       const startTime = performance.now();
       let newLinkCrawled = linkCrawled.link;
-
       // How long you want the delay to be, measured in milliseconds.
       setTimeout(async () => {
         fetch(newLinkCrawled, {
           method: "GET",
           agent,
+          credentials: "include",
           headers: {
             "User-Agent":
               // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36:",
               // "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+              // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
           },
-          keepalive: true,
-          // maxSockets: 15,
-          // host: !proxyHost ? null : proxyHost,
-          // port: !proxyPort ? null : proxyPort,
+          // keepalive: true,
           host: rawHostUrl,
           path: pathURL,
         })
           .then((response) => {
-            if(response.status > 399 && response.status < 500){
-              console.log('Client Error', {
+            // If 403 rerun with proxy 
+            if (response.status > 399 && response.status < 500) {
+              console.log("Client Error", response.status);
+              fetch(newLinkCrawled, {
+                method: "GET",
+                // proxyAgent,
+                proxy: 'http://localhost:3001/',
+                // These headers will allow for accurate status code and not get a 403
+                headers: {
+                  "User-Agent":
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",                  // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+                },
+                // accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.",
+                // scheme: schemeHeader,
+                keepalive: true,
+                host: rawHostUrl,
+                path: pathURL,
+              }) 
+              .then((response) => {
+                console.log(response.status);
+                linkStatus.push({
+                  urlFrom: linkCrawled.URLFrom,
+                  urlTo: newLinkCrawled,
+                  text: linkCrawled.text,
+                  linkStatus: response.status,
+                  statusText: response.statusText,
+                  linkFollow: linkCrawled.linkFollow,
+                });
+                index++;
+              })
+              .catch((error) => {
+                console.log("---    Fetch retry failed    ---");
+                console.log("Error:", error);
+                // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
+                linkStatus.push({
+                  URLFrom: linkCrawled.URLFrom,
+                  urlTo: newLinkCrawled,
+                  text: linkCrawled.text,
+                  linkStatus: "Error on this link",
+                  statusText: "Error on this link",
+                  linkFollow: linkCrawled.linkFollow,
+                });
+                index++;
+                console.log("---    Continuing the check    ---");
+              });
+            } else {
+              linkStatus.push({
+                urlFrom: linkCrawled.URLFrom,
                 urlTo: newLinkCrawled,
+                text: linkCrawled.text,
                 linkStatus: response.status,
                 statusText: response.statusText,
-              })
+                linkFollow: linkCrawled.linkFollow,
+              });
+              index++;
             }
-            linkStatus.push({
-              urlFrom: linkCrawled.URLFrom,
-              urlTo: newLinkCrawled,
-              text: linkCrawled.text,
-              linkStatus: response.status,
-              statusText: response.statusText,
-              linkFollow: linkCrawled.linkFollow,
-            });
-            index++;
             if (array.length - 1 === index) {
               const endTime = performance.now();
               //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
@@ -392,16 +470,17 @@ const statusCheck = async (array) => {
           .catch((error) => {
             console.log("---    Error    ---");
             console.error(error);
+            console.log(newLinkCrawled);
             console.log("---    Retrying the fetch    ---");
             setTimeout(async () => {
               fetch(newLinkCrawled, {
                 method: "GET",
-                pool: httpAgent,
+                pool: agent,
                 // These headers will allow for accurate status code and not get a 403
                 headers: {
                   "User-Agent":
                     "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-                    // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+                  // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
                 },
                 keepalive: true,
                 // maxSockets: 15,
@@ -451,7 +530,7 @@ const statusCheck = async (array) => {
                   index++;
                   console.log("---    Continuing the check    ---");
                 });
-            }, i = 1 ? i * fetchRateLimiting : 1 * fetchRateLimiting);
+            }, 0);
             if (array.length - 1 === index) {
               //   console.dir("Final Array", linkStatus, {
               //     maxArrayLength: maxArrayLength});
@@ -466,7 +545,7 @@ const statusCheck = async (array) => {
               runningArray(array);
             }
           });
-      }, i * fetchRateLimiting);
+      }, 0);
     });
   };
   runningArray(array);
