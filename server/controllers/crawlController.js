@@ -174,6 +174,7 @@ const CSVCrawlLink = asyncHandler(async () => {
         });
     });
   };
+
   // Step : Create an instance of a new crawler
   const crawlerInstance = new Crawler({
     headers: {
