@@ -12,7 +12,7 @@ function GscCrawlPage() {
 
   const dispatch = useDispatch();
 
-  const [inputFile, setInputFile] = useState("");
+  const [inputFile, setInputFile] = useState([]);
   const [formState, setFormState] = useState("");
   const [active, setActive] = useState("none");
 
@@ -43,6 +43,10 @@ function GscCrawlPage() {
     let formData = new FormData();
     formData.append("csvFile", inputFile);
     event.preventDefault();
+    for (let i = 0; i < inputFile.length; i++) {
+      formData.append(`targetFiles[${i}]`, inputFile[i])
+  }
+    console.log(formData);
     dispatch(gscCrawlLink(formData));
     // clear
     setFormState({});

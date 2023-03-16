@@ -36,34 +36,35 @@ const upload = async (req, res) => {
     if (req.file == undefined) {
       return res.status(400).send({ message: "Please upload a file!" });
     }
+    console.log(req.file)
     // rename file so it's always the same // Was in a timeout - removed timeout
-    await fs.rename(
-      `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
-      `${__basedir}/resources/static/assets/uploads/gsccrawl.csv`,
-      (err) => {
-        if (err) throw err;
-        console.log("\nFile Renamed!\n");
-      }
-    );
+    // await fs.rename(
+    //   `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
+    //   `${__basedir}/resources/static/assets/uploads/gsccrawl.csv`,
+    //   (err) => {
+    //     if (err) throw err;
+    //     console.log("\nFile Renamed!\n");
+    //   }
+    // );
     // Read the csv file and get the links
-    await setTimeout(async function () {
-      fs.createReadStream(
-        __basedir + `/resources/static/assets/uploads/gsccrawl.csv`
-      )
-        .pipe(parse({ delimiter: ",", from_line: 2 }))
-        .on("data", function (row) {
-          firstLinks = [...row].shift();
-          firstLinks.trim();
-          linkComparison.push(firstLinks);
-        })
-        .on("error", function (error) {
-          console.log(error.message);
-        })
-        .on("end", function () {
-          console.log("Links from reader:", csvLinks);
-          console.log("CSV scan finished");
-        });
-    }, 1000);
+    // await setTimeout(async function () {
+    //   fs.createReadStream(
+    //     __basedir + `/resources/static/assets/uploads/gsccrawl.csv`
+    //   )
+    //     .pipe(parse({ delimiter: ",", from_line: 2 }))
+    //     .on("data", function (row) {
+    //       firstLinks = [...row].shift();
+    //       firstLinks.trim();
+    //       linkComparison.push(firstLinks);
+    //     })
+    //     .on("error", function (error) {
+    //       console.log(error.message);
+    //     })
+    //     .on("end", function () {
+    //       console.log("Links from reader:");
+    //       console.log("CSV scan finished");
+    //     });
+    // }, 1000);
     
 
   } catch (err) {
