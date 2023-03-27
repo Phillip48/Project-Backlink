@@ -7,13 +7,14 @@ import GSCLinkItem from "../components/items/gscLinkItem";
 
 function GscCrawlPage() {
   let dataLinksLength;
+  const MAX_COUNT = 2;
   const { isLoading, isError, message } = useSelector((state) => state.links);
   const { gscLinks } = useSelector((state) => state.gscLinks);
 
   const dispatch = useDispatch();
 
-  const [inputFile, setInputFile] = useState([]);
-  const [formState, setFormState] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [fileLimit, setFileLimit] = useState(false);
   const [active, setActive] = useState("none");
 
   const ifLinks = () => {
@@ -32,25 +33,32 @@ function GscCrawlPage() {
     }
   };
 
-  const handleChange = (event) => {
-    setInputFile(event.target.files[0]);
-    setFormState({ ...formState, [event.target.name]: event.target.value });
-  };
+
+  const handleFileEvent =  (e) => {
+    const chosenFiles = Array.prototype.slice.call(e.target.files)
+    handleUploadFiles(chosenFiles);
+  }
 
   // submit form
-  const handleFormSubmit = async (event) => {
-    setActive("all-links");
-    let formData = new FormData();
-    formData.append("csvFile", inputFile);
-    event.preventDefault();
-    for (let i = 0; i < inputFile.length; i++) {
-      formData.append(`targetFiles[${i}]`, inputFile[i])
-  }
-    console.log(formData);
-    dispatch(gscCrawlLink(formData));
-    // clear
-    setFormState({});
-    // window.location.reload();
+  const handleUploadFiles = files => {
+    const uploaded = [...uploadedFiles];
+    let limitExceeded = false;
+    files.some((file) => {
+        if (uploaded.findIndex((f) => f.name === file.name) === -1) {
+            uploaded.push(file);
+            if (uploaded.length === MAX_COUNT) setFileLimit(true);
+            if (uploaded.length > MAX_COUNT) {
+                alert(`You can only add a maximum of ${MAX_COUNT} files`);
+                setFileLimit(false);
+                limitExceeded = true;
+                return true;
+            }
+        }
+    })
+    console.log(uploaded);
+    if (!limitExceeded) setUploadedFiles(uploaded)
+    console.log(uploaded);
+
   };
 
   useEffect(() => {
@@ -84,12 +92,12 @@ function GscCrawlPage() {
               id="csvFile_input"
               // name="csvFile"
               accept=".csv"
-              value={formState.csvFile}
-              onChange={handleChange}
+              onChange={handleFileEvent}
+              disabled={fileLimit}
               webkitdirectory
               multiple
             />
-            <button type="submit" onClick={handleFormSubmit}>
+            <button type="submit" onClick={handleUploadFiles}>
               Submit
             </button>
           </form>
