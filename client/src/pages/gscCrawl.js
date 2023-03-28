@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
 import { gscCrawlLink } from "../../src/features/gscLinks/gscLinksSlice";
 import GSCLinkItem from "../components/items/gscLinkItem";
+// import { upload } from "../../../server/controllers/gscController";
 
 function GscCrawlPage() {
   let dataLinksLength;
@@ -33,18 +34,21 @@ function GscCrawlPage() {
     }
   };
 
-
   const handleFileEvent =  (e) => {
     const chosenFiles = Array.prototype.slice.call(e.target.files)
     handleUploadFiles(chosenFiles);
   }
 
   // submit form
-  const handleUploadFiles = files => {
+  const handleUploadFiles = async files => {
+    const formData = new FormData();
     const uploaded = [...uploadedFiles];
     let limitExceeded = false;
-    files.some((file) => {
+    await files.some((file) => {
         if (uploaded.findIndex((f) => f.name === file.name) === -1) {
+          for (let i = 0; i < file.length; i++) {
+            formData.append('monfichier', file[i]);
+          }
             uploaded.push(file);
             if (uploaded.length === MAX_COUNT) setFileLimit(true);
             if (uploaded.length > MAX_COUNT) {
@@ -55,11 +59,15 @@ function GscCrawlPage() {
             }
         }
     })
-    console.log(uploaded);
     if (!limitExceeded) setUploadedFiles(uploaded)
-    console.log(uploaded);
-
+    callDispatch(formData);
   };
+
+
+  const callDispatch =  (formData) => {
+    console.log(formData);
+    dispatch(gscCrawlLink(formData));
+  }
 
   useEffect(() => {
     // Check if theres an error from redux

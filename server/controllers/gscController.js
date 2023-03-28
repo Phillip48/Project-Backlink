@@ -32,11 +32,15 @@ let format = month + "/" + day + "/" + year;
 const upload = async (req, res) => {
   try {
     await uploadFile(req, res);
+    console.log('File name', req.file);
+    console.log('File name', req.files);
+    console.log('Req body', req.body);
+    // console.log('Req', req);
+    console.log('Backend here after file upload to multer!');
     fileName = req.file;
-    if (req.file == undefined) {
-      return res.status(400).send({ message: "Please upload a file!" });
-    }
-    console.log(req.file)
+    // if (req.file == undefined) {
+    //   return res.status(400).send({ message: "Please upload a file!" });
+    // }
     // rename file so it's always the same // Was in a timeout - removed timeout
     // await fs.rename(
     //   `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
@@ -69,9 +73,9 @@ const upload = async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.sendStatus(500).send({
-      message: `Could not upload the file. ${err}`,
-    });
+    // res.sendStatus(500).send({
+    //   message: `Could not upload the file. ${err}`,
+    // });
   }
 };
 

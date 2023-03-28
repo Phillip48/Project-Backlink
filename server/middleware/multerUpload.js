@@ -1,5 +1,5 @@
 const multer = require("multer");
-
+console.log('multer here!');
 // configure multer for your server folder
 var storage = multer.diskStorage({
     destination: (req, file, cb) =>{
@@ -8,6 +8,7 @@ var storage = multer.diskStorage({
         cb(null, "/resources/static/assets/uploads/");
     },
     filename: (req, file, cb)=>{
+        console.log('multer file 1', file);
         cb(null, file.originalname)
     }
 });
@@ -15,7 +16,7 @@ var storage = multer.diskStorage({
 //Filter the image type
 const csvFileFilter = (req, file, cb) =>{
     if(!file.originalname.match(/\.(csv)＄/)) { //If the file uploaded is not any of this file type
-
+    console.log('multer file 2', file);
     // If error in file type, then attacch this error to the request header
         req.fileValidationError = "You can upload only csv files";
         return cb(null,false, req.fileValidationError);
