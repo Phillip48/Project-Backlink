@@ -106,8 +106,8 @@ const CSVCrawlLink = asyncHandler(async () => {
   // Step : calls the crawl as soon as the function is called
   setTimeout(async function () {
     limiter();
-    proxyGenerator();
-    // crawlerInstance.queue(csvLinks);
+    // proxyGenerator();
+    crawlerInstance.queue(csvLinks);
   }, 1000);
 
   // Step : Called to get a free proxy
@@ -252,7 +252,7 @@ const CSVCrawlLink = asyncHandler(async () => {
         const filterLinks = async () => {
           let crawledNewLink;
           if ((csvLinks.length - 1 == csvCount)) {
-            console.log('Working link check')
+            console.log('Working link check');
             await limiter();
             crawledLinks.filter(async function (element) {
               if (element.link == undefined) {
@@ -263,7 +263,7 @@ const CSVCrawlLink = asyncHandler(async () => {
 
             crawledLinks.forEach(async (element) => {
               crawledNewLink = element.link;
-              if (crawledLinks.length -1  == crawledLinksCount) {
+              if (crawledLinks.length - 1  == crawledLinksCount) {
                 await limiter();
                 linkConverter(crawledLinks);
                 // statusCheck(formattedLinks);
@@ -292,7 +292,7 @@ const CSVCrawlLink = asyncHandler(async () => {
             });
           }
         };
-        filterLinks();
+        // filterLinks();
         const endTime = performance.now();
         console.log(
           `Inital crawl for ${hostUrl} took ${
@@ -304,6 +304,7 @@ const CSVCrawlLink = asyncHandler(async () => {
         // Passes array into function to convert it. Then takes the formatted links array and checks the link status putting it into an object
         // After StatusCheck is done it will check the DB to see if the links in the array are in there. If its not create the link in the array.
       }
+      linkConverter(crawledLinks);
       done();
     },
   });
@@ -319,7 +320,7 @@ const linkConverter = async (array) => {
   await array.forEach((linkCrawled) => {
     let newLinkCrawled = linkCrawled.link;
 
-    if (array.length - 1 == forEachCount && crawledLinks.length - 1  == crawledLinksCount) {
+    if (array.length - 1 == forEachCount || array.length - 1 == forEachCount && crawledLinks.length - 1  == crawledLinksCount) {
       statusCheck(formattedLinks);
       return;
     } else if (newLinkCrawled.startsWith("#")) {
@@ -379,10 +380,22 @@ const statusCheck = async (array) => {
   const proxyAgent = new HttpsProxyAgent(`http://${proxyHost}:${proxyPort}`);
   // Callback function
   const runningArray = async (array) => {
+    if (array.length == index) {
+      const endTime = performance.now();
+      //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+      console.log(
+        `Status check took ${endTime - startTime} milliseconds.`
+      );
+      console.log("Final array length", linkStatus.length);
+      linkDB(linkStatus);
+    }
     await array.forEach(async (linkCrawled, i) => {
       await limiter();
       const startTime = performance.now();
       let newLinkCrawled = linkCrawled.link;
+      console.log(i);
+      console.log(newLinkCrawled);
+      console.log(index, "index");
       // How long you want the delay to be, measured in milliseconds.
       setTimeout(async () => {
         fetch(newLinkCrawled, {
@@ -420,7 +433,7 @@ const statusCheck = async (array) => {
                 path: pathURL,
               }) 
               .then((response) => {
-                console.log(response.status);
+                console.log(linkCrawled.URLFrom, response.status);
                 linkStatus.push({
                   urlFrom: linkCrawled.URLFrom,
                   urlTo: newLinkCrawled,
@@ -429,7 +442,16 @@ const statusCheck = async (array) => {
                   statusText: response.statusText,
                   linkFollow: linkCrawled.linkFollow,
                 });
-                index++;
+                index+=1;
+                if (array.length - 1 == index || array.length - 1 == i || array.length + 1 == i || array.length == i) {
+                  const endTime = performance.now();
+                  //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+                  console.log(
+                    `Status check took ${endTime - startTime} milliseconds.`
+                  );
+                  console.log("Final array length", linkStatus.length);
+                  linkDB(linkStatus);
+                }
               })
               .catch((error) => {
                 console.log("---    Fetch retry failed    ---");
@@ -443,8 +465,17 @@ const statusCheck = async (array) => {
                   statusText: "Error on this link",
                   linkFollow: linkCrawled.linkFollow,
                 });
-                index++;
+                index+=1;
                 console.log("---    Continuing the check    ---");
+                if (array.length - 1 == index || array.length - 1 == i || array.length + 1 == i || array.length == i) {
+                  const endTime = performance.now();
+                  //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+                  console.log(
+                    `Status check took ${endTime - startTime} milliseconds.`
+                  );
+                  console.log("Final array length", linkStatus.length);
+                  linkDB(linkStatus);
+                }
               });
             } else {
               linkStatus.push({
@@ -455,16 +486,17 @@ const statusCheck = async (array) => {
                 statusText: response.statusText,
                 linkFollow: linkCrawled.linkFollow,
               });
-              index++;
-            }
-            if (array.length - 1 === index) {
-              const endTime = performance.now();
-              //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
-              console.log(
-                `Status check took ${endTime - startTime} milliseconds.`
-              );
-              console.log("Final array length", linkStatus.length);
-              linkDB(linkStatus);
+              console.log(linkCrawled.URLFrom, response.status);
+              index+=1;
+              if (array.length == index) {
+                const endTime = performance.now();
+                //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
+                console.log(
+                  `Status check took ${endTime - startTime} milliseconds.`
+                );
+                console.log("Final array length", linkStatus.length);
+                linkDB(linkStatus);
+              }
             }
           })
           // If theres an error run this code
@@ -499,8 +531,8 @@ const statusCheck = async (array) => {
                     linkFollow: linkCrawled.linkFollow,
                   });
 
-                  index++;
-                  if (array.length - 1 === index) {
+                  index+=1;
+                  if (array.length - 1 == index || array.length - 1 == i || array.length + 1 == i || array.length == i) {
                     const endTime = performance.now();
                     console.dir(linkStatus, { maxArrayLength: maxArrayLength });
                     console.log(
@@ -528,11 +560,21 @@ const statusCheck = async (array) => {
                     statusText: "Error on this link",
                     linkFollow: linkCrawled.linkFollow,
                   });
-                  index++;
+                  index+=1;
+                  if (array.length - 1 == index || array.length - 1 == i || array.length + 1 == i || array.length == i) {
+                    //   console.dir("Final Array", linkStatus, {
+                    //     maxArrayLength: maxArrayLength});
+                    const endTime = performance.now();
+                    console.log(
+                      `Status check took ${endTime - startTime} milliseconds.`
+                    );
+                    console.log("Final array length", linkStatus.length);
+                    linkDB(linkStatus);
+                  }
                   console.log("---    Continuing the check    ---");
                 });
-            }, 0);
-            if (array.length - 1 === index) {
+            }, 1000);
+            if (array.length - 1 == index || array.length - 1 == i || array.length + 1 == i || array.length == i) {
               //   console.dir("Final Array", linkStatus, {
               //     maxArrayLength: maxArrayLength});
               const endTime = performance.now();
@@ -546,7 +588,7 @@ const statusCheck = async (array) => {
               runningArray(array);
             }
           });
-      }, 0);
+      }, 1000);
     });
   };
   runningArray(array);
@@ -569,7 +611,7 @@ const linkDB = async (array) => {
         dateFound: format,
         dateLastChecked: format,
       });
-      index++;
+      index+=1;
     } else {
       await DBLINK.findOneAndUpdate(
         { urlTo: link.urlTo },
