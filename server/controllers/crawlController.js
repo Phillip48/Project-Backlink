@@ -380,19 +380,11 @@ const statusCheck = async (array) => {
   const proxyAgent = new HttpsProxyAgent(`http://${proxyHost}:${proxyPort}`);
   // Callback function
   const runningArray = async (array) => {
-    if (array.length == indexCount) {
-      const endTime = performance.now();
-      //   console.dir(linkStatus, { maxArrayLength: maxArrayLength });
-      console.log(
-        `Status check took ${endTime - startTime} milliseconds.`
-      );
-      console.log("Final array length", linkStatus.length);
-      linkDB(linkStatus);
-    }
     await array.forEach(async (linkCrawled, i) => {
       await limiter();
+      console.log(indexCount, "indexCount - link ->", linkCrawled.link);
       const startTime = performance.now();
-      console.log(linkCrawled, indexCount);
+      // console.log(linkCrawled, indexCount);
       let newLinkCrawled = linkCrawled.link;
       if (array.length == indexCount || array.length - 1 == i) {
         console.log(i);
@@ -404,6 +396,7 @@ const statusCheck = async (array) => {
           `Status check took ${endTime - startTime} milliseconds.`
         );
         console.log("Final array length", linkStatus.length);
+        // console.log('array',linkStatus);
         linkDB(linkStatus);
       }
       // How long you want the delay to be, measured in milliseconds.
@@ -452,7 +445,7 @@ const statusCheck = async (array) => {
                   statusText: response.statusText,
                   linkFollow: linkCrawled.linkFollow,
                 });
-                indexCount++;
+                indexCount+=1;
               })
               .catch((error) => {
                 console.log("---    Fetch retry failed    ---");
@@ -466,7 +459,7 @@ const statusCheck = async (array) => {
                   statusText: "Error on this link",
                   linkFollow: linkCrawled.linkFollow,
                 });
-                indexCount++;
+                indexCount+=1;
                 console.log("---    Continuing the check    ---");
               });
             } else {
@@ -479,7 +472,7 @@ const statusCheck = async (array) => {
                 linkFollow: linkCrawled.linkFollow,
               });
               // console.log(linkCrawled.urlTo, response.status);
-              indexCount++;
+              indexCount+=1;
             }
           })
           // If theres an error run this code
@@ -514,7 +507,7 @@ const statusCheck = async (array) => {
                     linkFollow: linkCrawled.linkFollow,
                   });
 
-                  indexCount++;
+                  indexCount+=1;
                   console.log("---    Continuing the check    ---");
                 })
                 .catch((error) => {
@@ -534,7 +527,7 @@ const statusCheck = async (array) => {
                     statusText: "Error on this link",
                     linkFollow: linkCrawled.linkFollow,
                   });
-                  indexCount++;
+                  indexCount+=1;
                   console.log("---    Continuing the check    ---");
                 });
             }, 1000);
@@ -550,6 +543,7 @@ const linkDB = async (array) => {
   console.log("---    Updating/Creating links in the Database    ---");
   let index = 0;
   console.log(array.length);
+  // console.log(array);
   array.forEach(async (link) => {
     const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
     if (!linkInDB) {
