@@ -7,7 +7,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "async-sema": "^3.1.1",
     "bcrypt": "^5.1.0",
     "busboy": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
