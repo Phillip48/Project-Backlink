@@ -18,7 +18,7 @@ const HttpsProxyAgent = require("https-proxy-agent");
 
 // Call functions needed to add to the db
 const { createLink } = require("../controllers/linkController");
-const {convertArrayToCSV} = require("convert-array-to-csv");
+const { convertArrayToCSV } = require("convert-array-to-csv");
 const { setMaxListeners } = require("events");
 
 // ===================================== Important ===================================== //
@@ -37,6 +37,7 @@ let pathURL;
 let crawlingURL;
 // Array for links read from the CSV
 const csvLinks = [];
+const csvLinksAfterCheck = [];
 const csvWriteLinks = [];
 // Arrays for the links and status resposne
 let crawledLinks = [];
@@ -55,7 +56,6 @@ let year = date.getFullYear();
 let month = date.getMonth() + 1;
 let day = date.getDate();
 let format = month + "/" + day + "/" + year;
-
 // ================================== Code =================================================== //
 // ============== Important functions ============== //
 // JS Promise to delay
@@ -219,6 +219,44 @@ const CSVCrawlLink = asyncHandler(async () => {
     await sleep(3000);
     // proxyGenerator();
     crawlerInstance.queue(csvLinks);
+    //   const httpAgent = new http.Agent({ keepalive: true });
+    // const httpsAgent = new https.Agent({ keepAlive: true });
+    // httpAgent.maxSockets = 5;
+    // httpsAgent.maxSockets = 5;
+    // const schemeHeader = (_parsedURL) => {
+    //   _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+    // };
+    // const agent = (_parsedURL) =>
+    //   _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+    // const proxyAgent = new HttpsProxyAgent(`http://${proxyHost}:${proxyPort}`);
+    // for (let i = 0; i < csvLinks.length; i++) {
+    //   if (i == csvLinks.length) {
+    //     // csvLinksAfterCheck
+    //     console.log('done');
+    //     crawlerInstance.queue(csvLinksAfterCheck);
+    //   }
+    //   try{
+    //     fetch(csvLinks[i], ({
+    //     method: "GET",
+    //     agent,
+    //     credentials: "include",
+    //     headers: {
+    //       "User-Agent":
+    //         // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36:",
+    //         // "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+    //         // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+    //         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+    //     },
+    //     // keepalive: true,
+    //     host: rawHostUrl,
+    //     path: pathURL,
+    //   }))
+    //   } catch(error) {
+    //     console.log('There was an error', error);
+    //     continue
+    //   }
+
+    // }
   }, 1000);
 
   // Step : Called to get a free proxy
@@ -299,78 +337,95 @@ const CSVCrawlLink = asyncHandler(async () => {
       // The Referer request header provides the previous web page’s address before the request is sent to the web server.
       Referer: "http://www.google.com/",
     },
-    // retries: 0, // The crawlers internal code will not retry but custom code will
-    rateLimit: 3000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
-    maxConnections: 1, // maxConnections is the maximum number of tasks that can be running at the same time
+    retries: 1, // The crawlers internal code will not retry but custom code will
+    // rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
+    maxConnections: 4, // maxConnections is the maximum number of tasks that can be running at the same time
 
     // Will be called for each crawled page
     callback: (error, res, done) => {
       if (error) {
-        console.log("---    Error    ---", error);
-        // proxyGenerator();
-      } else {
-        csvCount++;
-        initalCrawlCount++;
-        hostUrl = res.request.req.protocol + "//" + res.request.host;
-        rawHostUrl = res.request.host;
-        urlProtocol = res.request.req.protocol;
-        pathURL = res.request.path;
-        crawlingURL = hostUrl + pathURL;
-        console.log("---    Working...    ---");
-        console.log("Crawling URL:", crawlingURL);
-        // if(res.statusCode == 200){
-        //   console.log("\u001b[1;32m Status code: 200 ->", crawlingURL);
-        // }
-        if (res.statusCode == 404 || res.statusCode == 403) {
-          console.log(
-            `\u001b[1;31m Status code: ${res.statusCode} ->`,
-            crawlingURL
-          );
-        }
-        // console.log("URL Protocol:", urlProtocol);
-        // console.log("Host URL:", hostUrl);
-        // console.log("Raw Host:", rawHostUrl);
-        // console.log("URL Path:", pathURL);
-        // Looking for href in the HTML
-        const $ = res.$;
-        const anchorTag = $("a");
-        anchorTag.each(async function () {
-          // For the link
-          let link = $(this).attr("href");
-          // To see things link follow, no follow etc...
-          let linkText = $(this).text();
-          linkText.trim();
-          let linkRel = $(this).attr("rel");
-          // console.log('link', link);
-          // Checking text to see if there are any line breaks with the anchor text and trims whitespace
-          if (
-            linkText.toString().startsWith("\n") ||
-            linkText.toString().endsWith("\n") || linkText.toString().startsWith("\r")
-            || linkText.toString().endsWith("\r")
-          ) {
-            linkText = linkText.replace(/[\r\n\t]/gm, "");
-            linkText = linkText.trim();
-          }
-          if (link == undefined || link == null) {
-            // console.log("undefined link removed", link);
-            return;
-          }
-          await backLinkPromise(link, linkRel, linkText);
-          await sleep(1000);
+        let link = error;
+        linkRel = "Couldnt get text do to website error";
+        linkText = "Couldnt get text do to website error";
+        csvWriteLinks.push({
+          urlFrom: link,
+          linkRel: linkRel,
+          linkText: linkText,
         });
-        console.log("-------------------------------------------");
-        if (csvLinks.length == initalCrawlCount) {
-          // console.log("Working last part of csvlink function");
-          if (crawledLinks.length == 0) {
-            console.log("No links found");
-            return;
-          } else {
-            statusCheckV2(crawledLinks);
-          }
-        }
-        // Passes array into function to convert it. Then takes the formatted links array and checks the link status putting it into an object
-        // After StatusCheck is done it will check the DB to see if the links in the array are in there. If its not create the link in the array.
+        // console.error("---    Error    ---", error);
+        console.error(error.stack);
+        done()
+        // done();
+        // proxyGenerator();
+        // console.error(error.stack);
       }
+      csvCount++;
+      initalCrawlCount++;
+      hostUrl = res.request.req.protocol + "//" + res.request.host;
+      rawHostUrl = res.request.host;
+      urlProtocol = res.request.req.protocol;
+      pathURL = res.request.path;
+      crawlingURL = hostUrl + pathURL;
+      console.log("---    Working...    ---");
+      // console.log("Crawling URL:", crawlingURL);
+      if (res.statusCode == 200) {
+        console.log("\u001b[1;32m Status code: 200 ->", crawlingURL);
+      } else if (res.statusCode == 404 || res.statusCode == 403) {
+        console.log(
+          `\u001b[1;31m Status code: ${res.statusCode} ->`,
+          crawlingURL
+        );
+      } else {
+        console.log(
+          `\u001b[1;31m Status code: ${res.statusCode} ->`,
+          crawlingURL
+        );
+      }
+      // console.log("URL Protocol:", urlProtocol);
+      // console.log("Host URL:", hostUrl);
+      // console.log("Raw Host:", rawHostUrl);
+      // console.log("URL Path:", pathURL);
+      // Looking for href in the HTML
+      const $ = res.$;
+      const anchorTag = $("a");
+      anchorTag.each(async function () {
+        // For the link
+        let link = $(this).attr("href");
+        // To see things link follow, no follow etc...
+        let linkText = $(this).text();
+        linkText.trim();
+        let linkRel = $(this).attr("rel");
+        // console.log('link', link);
+        // Checking text to see if there are any line breaks with the anchor text and trims whitespace
+        if (
+          linkText.toString().startsWith("\n") ||
+          linkText.toString().endsWith("\n") ||
+          linkText.toString().startsWith("\r") ||
+          linkText.toString().endsWith("\r")
+        ) {
+          linkText = linkText.replace(/[\r\n\t]/gm, "");
+          linkText = linkText.trim();
+        }
+        if (link == undefined || link == null) {
+          // console.log("undefined link removed", link);
+          return;
+        }
+        await backLinkPromise(link, linkRel, linkText);
+        await sleep(1000);
+      });
+      console.log("-------------------------------------------");
+      if (csvLinks.length == initalCrawlCount) {
+        // console.log("Working last part of csvlink function");
+        if (crawledLinks.length == 0) {
+          console.log("No links found");
+          return;
+        } else {
+          statusCheckV2(crawledLinks);
+        }
+      }
+      // Passes array into function to convert it. Then takes the formatted links array and checks the link status putting it into an object
+      // After StatusCheck is done it will check the DB to see if the links in the array are in there. If its not create the link in the array.
+
       // linkConverter(crawledLinks);
       done();
     },
@@ -413,17 +468,24 @@ const statusCheckV2 = async (array) => {
           "array length",
           "- Done -"
         );
-        const headers = ['urlFrom', 'urlTo', 'text', 'linkStatus', 'statusText', 'linkFollow',]
+        const headers = [
+          "urlFrom",
+          "urlTo",
+          "text",
+          "linkStatus",
+          "statusText",
+          "linkFollow",
+        ];
         const csvFromArrayOfObjects = convertArrayToCSV(csvWriteLinks, {
           headers,
-          seperator: ','
+          seperator: ",",
         });
-        fs.writeFile('output.csv', csvFromArrayOfObjects, err => {
-          if(err){
+        fs.writeFile("output.csv", csvFromArrayOfObjects, (err) => {
+          if (err) {
             console.log(err);
           }
-          console.log('Created CSV File');
-        })
+          console.log("Created CSV File");
+        });
       }
 
       if (array.length !== forEachCounter) {
