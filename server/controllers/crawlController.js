@@ -18,6 +18,7 @@ const HttpsProxyAgent = require("https-proxy-agent");
 
 // Call functions needed to add to the db
 const { createLink } = require("../controllers/linkController");
+const {convertArrayToCSV} = require("convert-array-to-csv");
 const { setMaxListeners } = require("events");
 
 // ===================================== Important ===================================== //
@@ -36,6 +37,7 @@ let pathURL;
 let crawlingURL;
 // Array for links read from the CSV
 const csvLinks = [];
+const csvWriteLinks = [];
 // Arrays for the links and status resposne
 let crawledLinks = [];
 let formattedLinks = [];
@@ -72,14 +74,15 @@ const isValidUrl = (urlString) => {
 const dbPromise = (linkCrawled) => {
   return new Promise(async (resolve) => {
     const linkInDB = await DBLINK.findOne({
-      urlTo: linkCrawled.urlTo, urlFrom: linkCrawled.urlFrom
+      urlTo: linkCrawled.urlTo,
+      urlFrom: linkCrawled.urlFrom,
     });
     if (!linkInDB) {
       createLink(linkCrawled);
       console.log("Creating Link"), resolve;
     } else {
       // console.log({ urlTo: linkCrawled.urlTo, urlFrom: linkCrawled.urlFrom });
-        // { urlFrom: linkCrawled.urlFrom },
+      // { urlFrom: linkCrawled.urlFrom },
       await DBLINK.findOneAndUpdate(
         { urlTo: linkCrawled.urlTo },
         { $set: { dateLastChecked: format } },
@@ -94,10 +97,10 @@ const dbPromise = (linkCrawled) => {
 const backLinkPromise = (link, linkRel, linkText) => {
   return new Promise(async (resolve) => {
     // code
-    // link !== undefined && 
+    // link !== undefined &&
     if (link.hostname) {
       link = link.hostname.replace("www.", "");
-      console.log('link hostname',link);
+      console.log("link hostname", link);
     }
     if (
       link.includes("brownandcrouppen.com") ||
@@ -155,7 +158,7 @@ const backLinkPromise = (link, linkRel, linkText) => {
           // dateFound: currentDate
         };
         crawledLinks.push(anchorObj), resolve;
-      } 
+      }
     } else {
       // console.log('link removed', link);
       resolve;
@@ -315,17 +318,14 @@ const CSVCrawlLink = asyncHandler(async () => {
         crawlingURL = hostUrl + pathURL;
         console.log("---    Working...    ---");
         console.log("Crawling URL:", crawlingURL);
-        if(res.statusCode == 200){ 
-          console.log("\u001b[1;32m Status code: 200 ->", crawlingURL);
-          
-        }
-        if(res.statusCode == 404){ 
-          console.log("\u001b[1;31m Status code: 404 ->", crawlingURL);
-          
-        }
-        if(res.statusCode == 403){ 
-          console.log("\u001b[1;31m Status code: 403 ->", crawlingURL);
-          
+        // if(res.statusCode == 200){
+        //   console.log("\u001b[1;32m Status code: 200 ->", crawlingURL);
+        // }
+        if (res.statusCode == 404 || res.statusCode == 403) {
+          console.log(
+            `\u001b[1;31m Status code: ${res.statusCode} ->`,
+            crawlingURL
+          );
         }
         // console.log("URL Protocol:", urlProtocol);
         // console.log("Host URL:", hostUrl);
@@ -339,19 +339,21 @@ const CSVCrawlLink = asyncHandler(async () => {
           let link = $(this).attr("href");
           // To see things link follow, no follow etc...
           let linkText = $(this).text();
+          linkText.trim();
           let linkRel = $(this).attr("rel");
           // console.log('link', link);
           // Checking text to see if there are any line breaks with the anchor text and trims whitespace
           if (
             linkText.toString().startsWith("\n") ||
-            linkText.toString().endsWith("\n")
+            linkText.toString().endsWith("\n") || linkText.toString().startsWith("\r")
+            || linkText.toString().endsWith("\r")
           ) {
             linkText = linkText.replace(/[\r\n\t]/gm, "");
             linkText = linkText.trim();
           }
           if (link == undefined || link == null) {
             // console.log("undefined link removed", link);
-            return
+            return;
           }
           await backLinkPromise(link, linkRel, linkText);
           await sleep(1000);
@@ -359,10 +361,10 @@ const CSVCrawlLink = asyncHandler(async () => {
         console.log("-------------------------------------------");
         if (csvLinks.length == initalCrawlCount) {
           // console.log("Working last part of csvlink function");
-          if(crawledLinks.length == 0){
-            console.log('No links found');
+          if (crawledLinks.length == 0) {
+            console.log("No links found");
             return;
-          } else{
+          } else {
             statusCheckV2(crawledLinks);
           }
         }
@@ -374,73 +376,6 @@ const CSVCrawlLink = asyncHandler(async () => {
     },
   });
 });
-
-// Step : Converts incomplete links to make them have its domain if it doens't already.
-// For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
-// We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
-const linkConverter = async (array) => {
-  console.log("---    Converting Links...    ---");
-  let forEachCount = 0;
-
-  await array.forEach((linkCrawled) => {
-    let newLinkCrawled = linkCrawled.link;
-    // newLinkCrawled.trim();
-    // console.log(newLinkCrawled);
-    if (
-      array.length - 1 == forEachCount ||
-      (array.length - 1 == forEachCount &&
-        crawledLinks.length - 1 == crawledLinksCount)
-    ) {
-      console.dir(formattedLinks, { maxArrayLength: 200 });
-      statusCheckV2(formattedLinks);
-      return;
-    }
-    if (
-      newLinkCrawled === undefined ||
-      newLinkCrawled.startsWith("#") ||
-      !newLinkCrawled ||
-      newLinkCrawled.trim() == 0
-    ) {
-      console.log("link removed", newLinkCrawled);
-      forEachCount++;
-    } else if (newLinkCrawled && newLinkCrawled.startsWith("//")) {
-      let pulledLink = newLinkCrawled;
-      pulledLink = urlProtocol + pulledLink;
-      formattedLinks.push({
-        URLFrom: linkCrawled.URLFrom,
-        link: pulledLink,
-        text: linkCrawled.text,
-        linkFollow: linkCrawled.linkFollow,
-      });
-      forEachCount++;
-      // console.log(pulledLink);
-    } else if (
-      newLinkCrawled &&
-      newLinkCrawled.startsWith("/") &&
-      !newLinkCrawled.startsWith("/www")
-    ) {
-      let pulledLink = newLinkCrawled;
-      pulledLink = hostUrl + pulledLink;
-      formattedLinks.push({
-        URLFrom: linkCrawled.URLFrom,
-        link: pulledLink,
-        text: linkCrawled.text,
-        linkFollow: linkCrawled.linkFollow,
-      });
-      forEachCount++;
-      // console.log(pulledLink);
-    } else {
-      formattedLinks.push({
-        URLFrom: linkCrawled.URLFrom,
-        link: newLinkCrawled,
-        text: linkCrawled.text,
-        linkFollow: linkCrawled.linkFollow,
-      });
-      forEachCount++;
-      // console.log(newLinkCrawled.link);
-    }
-  });
-};
 
 // Checks the status of the link
 const statusCheckV2 = async (array) => {
@@ -468,21 +403,27 @@ const statusCheckV2 = async (array) => {
       await sleep(2000);
       let linkCrawled = array;
       let newLinkCrawled = array;
-      // const linkInDB = await DBLINK.findOne({
-      //   urlTo: newLinkCrawled[forEachCounter].link,
-      // });
       if (array.length === forEachCounter) {
         console.log(
           forEachCounter,
           "forEachCounter",
+          dbCounter,
+          "Final dbCounter",
           array.length,
-          "array length"
+          "array length",
+          "- Done -"
         );
-        // console.log("Final length of status check array", linkStatus.length);
-        console.log("Final dbCounter++;", dbCounter);
-        // linkDB(linkStatus);
-        console.log("Links updated");
-        // return;
+        const headers = ['urlFrom', 'urlTo', 'text', 'linkStatus', 'statusText', 'linkFollow',]
+        const csvFromArrayOfObjects = convertArrayToCSV(csvWriteLinks, {
+          headers,
+          seperator: ','
+        });
+        fs.writeFile('output.csv', csvFromArrayOfObjects, err => {
+          if(err){
+            console.log(err);
+          }
+          console.log('Created CSV File');
+        })
       }
 
       if (array.length !== forEachCounter) {
@@ -498,6 +439,7 @@ const statusCheckV2 = async (array) => {
             linkFollow: newLinkCrawled[forEachCounter].linkFollow,
           };
           dbCounter++;
+          csvWriteLinks.push(dbPromiseObject);
           await dbPromise(dbPromiseObject);
           // const linkInDB = await DBLINK.findOne({
           //   urlTo: newLinkCrawled[forEachCounter].link,
@@ -589,6 +531,7 @@ const statusCheckV2 = async (array) => {
                     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                   };
                   dbCounter++;
+                  csvWriteLinks.push(dbPromiseObject);
                   await dbPromise(dbPromiseObject);
                   // const linkInDB = await DBLINK.findOne({
                   //   urlTo: newLinkCrawled[forEachCounter].link,
@@ -650,6 +593,7 @@ const statusCheckV2 = async (array) => {
                     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                   };
                   dbCounter++;
+                  csvWriteLinks.push(dbPromiseObject);
                   await dbPromise(dbPromiseObject);
                   // linkStatus.push({
                   //   URLFrom: linkCrawled[forEachCounter].URLFrom,
@@ -679,6 +623,7 @@ const statusCheckV2 = async (array) => {
                 linkFollow: newLinkCrawled[forEachCounter].linkFollow,
               };
               dbCounter++;
+              csvWriteLinks.push(dbPromiseObject);
               await dbPromise(dbPromiseObject);
               // const linkInDB = await DBLINK.findOne({
               //   urlTo: newLinkCrawled[forEachCounter].link,
@@ -744,6 +689,7 @@ const statusCheckV2 = async (array) => {
                   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                 };
                 dbCounter++;
+                csvWriteLinks.push(dbPromiseObject);
                 await dbPromise(dbPromiseObject);
                 // const linkInDB = await DBLINK.findOne({
                 //   urlTo: newLinkCrawled[forEachCounter].link,
@@ -804,6 +750,7 @@ const statusCheckV2 = async (array) => {
                   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                 };
                 dbCounter++;
+                csvWriteLinks.push(dbPromiseObject);
                 await dbPromise(dbPromiseObject);
                 // const linkInDB = await DBLINK.findOne({
                 //   urlTo: newLinkCrawled[forEachCounter].link,
@@ -838,41 +785,41 @@ const statusCheckV2 = async (array) => {
   runningArrayV2(array);
 };
 
-const linkDB = async (array) => {
-  console.log("---    Updating/Creating links in the Database    ---");
-  let index = 0;
-  console.log(array.length);
-  // console.log(array);
-  await array.forEach(async (link) => {
-    await sleep(1000);
-    const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
-    if (!linkInDB) {
-      createLink({
-        urlFrom: link.urlFrom,
-        urlTo: link.urlTo,
-        text: link.text,
-        linkStatus: link.linkStatus,
-        statusText: link.statusText,
-        linkFollow: link.linkFollow,
-        dateFound: format,
-        dateLastChecked: format,
-      });
-      index += 1;
-    } else {
-      await DBLINK.findOneAndUpdate(
-        { urlTo: link.urlTo },
-        { $set: { dateLastChecked: format } },
-        { runValidators: true, new: true }
-      );
-      index++;
-    }
-    if (array.length - 1 === index) {
-      console.log("-------------------------------------------");
-      console.log("Done with the Database");
-      return;
-    }
-  });
-};
+// const linkDB = async (array) => {
+//   console.log("---    Updating/Creating links in the Database    ---");
+//   let index = 0;
+//   console.log(array.length);
+//   // console.log(array);
+//   await array.forEach(async (link) => {
+//     await sleep(1000);
+//     const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
+//     if (!linkInDB) {
+//       createLink({
+//         urlFrom: link.urlFrom,
+//         urlTo: link.urlTo,
+//         text: link.text,
+//         linkStatus: link.linkStatus,
+//         statusText: link.statusText,
+//         linkFollow: link.linkFollow,
+//         dateFound: format,
+//         dateLastChecked: format,
+//       });
+//       index += 1;
+//     } else {
+//       await DBLINK.findOneAndUpdate(
+//         { urlTo: link.urlTo },
+//         { $set: { dateLastChecked: format } },
+//         { runValidators: true, new: true }
+//       );
+//       index++;
+//     }
+//     if (array.length - 1 === index) {
+//       console.log("-------------------------------------------");
+//       console.log("Done with the Database");
+//       return;
+//     }
+//   });
+// };
 
 // Step : Checking the repsonse status of the link
 // const statusCheck = async (array) => {
@@ -1048,6 +995,73 @@ module.exports = {
   CSVCrawlLink,
   upload,
 };
+
+// Step : Converts incomplete links to make them have its domain if it doens't already.
+// For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
+// We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
+// const linkConverter = async (array) => {
+//   console.log("---    Converting Links...    ---");
+//   let forEachCount = 0;
+
+//   await array.forEach((linkCrawled) => {
+//     let newLinkCrawled = linkCrawled.link;
+//     // newLinkCrawled.trim();
+//     // console.log(newLinkCrawled);
+//     if (
+//       array.length - 1 == forEachCount ||
+//       (array.length - 1 == forEachCount &&
+//         crawledLinks.length - 1 == crawledLinksCount)
+//     ) {
+//       console.dir(formattedLinks, { maxArrayLength: 200 });
+//       statusCheckV2(formattedLinks);
+//       return;
+//     }
+//     if (
+//       newLinkCrawled === undefined ||
+//       newLinkCrawled.startsWith("#") ||
+//       !newLinkCrawled ||
+//       newLinkCrawled.trim() == 0
+//     ) {
+//       console.log("link removed", newLinkCrawled);
+//       forEachCount++;
+//     } else if (newLinkCrawled && newLinkCrawled.startsWith("//")) {
+//       let pulledLink = newLinkCrawled;
+//       pulledLink = urlProtocol + pulledLink;
+//       formattedLinks.push({
+//         URLFrom: linkCrawled.URLFrom,
+//         link: pulledLink,
+//         text: linkCrawled.text,
+//         linkFollow: linkCrawled.linkFollow,
+//       });
+//       forEachCount++;
+//       // console.log(pulledLink);
+//     } else if (
+//       newLinkCrawled &&
+//       newLinkCrawled.startsWith("/") &&
+//       !newLinkCrawled.startsWith("/www")
+//     ) {
+//       let pulledLink = newLinkCrawled;
+//       pulledLink = hostUrl + pulledLink;
+//       formattedLinks.push({
+//         URLFrom: linkCrawled.URLFrom,
+//         link: pulledLink,
+//         text: linkCrawled.text,
+//         linkFollow: linkCrawled.linkFollow,
+//       });
+//       forEachCount++;
+//       // console.log(pulledLink);
+//     } else {
+//       formattedLinks.push({
+//         URLFrom: linkCrawled.URLFrom,
+//         link: newLinkCrawled,
+//         text: linkCrawled.text,
+//         linkFollow: linkCrawled.linkFollow,
+//       });
+//       forEachCount++;
+//       // console.log(newLinkCrawled.link);
+//     }
+//   });
+// };
 
 // if(isValidUrl(newLinkCrawled)){
 //   let domain = (newLinkCrawled.toString());
