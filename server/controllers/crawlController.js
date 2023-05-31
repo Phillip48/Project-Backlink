@@ -13,8 +13,7 @@ const multer = require("multer");
 const http = require("http");
 const https = require("https");
 const HttpsProxyAgent = require("https-proxy-agent");
-// const { RateLimit } = require("async-sema");
-// const limiter = RateLimit(1);
+const axios = require("axios");
 
 // Call functions needed to add to the db
 const { createLink } = require("../controllers/linkController");
@@ -94,73 +93,92 @@ const dbPromise = (linkCrawled) => {
 };
 
 // JS Promise to se if the link is one of our internal sites or client sites
-const backLinkPromise = (link, linkRel, linkText) => {
+const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
   return new Promise(async (resolve) => {
     // code
     // link !== undefined &&
-    if (link.hostname) {
-      link = link.hostname.replace("www.", "");
-      console.log("link hostname", link);
-    }
     if (
-      link.includes("brownandcrouppen.com") ||
-      link.includes("https://brownandcrouppen.com") ||
-      link.includes("cutterlaw.com") ||
-      link.includes("https://cutterlaw.com") ||
-      link.includes("lanierlawfirm.com") ||
-      link.includes("http://lanierlawfirm.com") ||
-      link.includes("nursinghomeabuse.org") ||
-      link.includes("https://nursinghomeabuse.org") ||
-      link.includes("helpingsurvivors.org") ||
-      link.includes("https://helpingsurvivors.org") ||
-      link.includes("socialmediavictims.org") ||
-      link.includes("https://socialmediavictims.org") ||
-      link.includes("m-n-law.com") ||
-      link.includes("https://m-n-law.com") ||
-      link.includes("samndan.com") ||
-      link.includes("https://samndan.com") ||
-      link.includes("omaralawgroup.com") ||
-      link.includes("https://omaralawgroup.com") ||
-      link.includes("birthinjurycenter.org/") ||
-      link.includes("https://birthinjurycenter.org/") ||
-      link.includes("veternsguide.org") ||
-      link.includes("https://veternsguide.org") ||
-      link.includes("steinlawoffices.com") ||
-      link.includes("https://steinlawoffices.com") ||
-      link.includes("levinperconti.com") ||
-      link.includes("https://levinperconti.com") ||
-      link.includes("cordiscosaile.com") ||
-      link.includes("https://cordiscosaile.com") ||
-      link.includes("advologix.com") ||
-      link.includes("https://advologix.com") ||
-      link.includes("wvpersonalinjury.com") ||
-      link.includes("https://wvpersonalinjury.com") ||
-      link.includes("nstlaw.com") ||
-      link.includes("https://nstlaw.com")
+      link === undefined ||
+      link == undefined ||
+      link === null ||
+      link == null ||
+      link.startsWith('#') ||
+      link.startsWith('mailto')
     ) {
+      // console.log("link undefined");
+      resolve;
+    }
+    if (isValidUrl(link)) {
       console.log(link);
-      if (linkRel == "follow" || linkRel == "nofollow") {
-        anchorObj = {
-          URLFrom: crawlingURL,
-          link: link,
-          text: linkText,
-          linkFollow: linkRel,
-          // dateFound: currentDate
-        };
-        rawLinkCount++;
-        crawledLinks.push(anchorObj), resolve;
+      // link = new URL(link);
+      if (link.hostname) {
+        link = link.hostname.replace("www.", "");
+        link.toString();
+        // console.log(link);
+      }
+      if (
+        link.includes("samndan.com") ||
+        link.includes("https://samndan.com") ||
+        link.includes("omaralawgroup.com") ||
+        link.includes("https://omaralawgroup.com") ||
+        link.includes("birthinjurycenter.org/") ||
+        link.includes("https://birthinjurycenter.org/") ||
+        link.includes("veternsguide.org") ||
+        link.includes("https://veternsguide.org") ||
+        link.includes("steinlawoffices.com") ||
+        link.includes("https://steinlawoffices.com") ||
+        link.includes("levinperconti.com") ||
+        link.includes("https://levinperconti.com") ||
+        link.includes("cordiscosaile.com") ||
+        link.includes("https://cordiscosaile.com") ||
+        link.includes("advologix.com") ||
+        link.includes("https://advologix.com") ||
+        link.includes("wvpersonalinjury.com") ||
+        link.includes("https://wvpersonalinjury.com") ||
+        link.includes("nstlaw.com") ||
+        link.includes("https://nstlaw.com") ||
+        link.includes("brownandcrouppen.com") ||
+        link.includes("https://brownandcrouppen.com") ||
+        link.includes("cutterlaw.com") ||
+        link.includes("https://cutterlaw.com") ||
+        link.includes("lanierlawfirm.com") ||
+        link.includes("http://lanierlawfirm.com") ||
+        link.includes("nursinghomeabuse.org") ||
+        link.includes("https://nursinghomeabuse.org") ||
+        link.includes("helpingsurvivors.org") ||
+        link.includes("https://helpingsurvivors.org") ||
+        link.includes("socialmediavictims.org") ||
+        link.includes("https://socialmediavictims.org") ||
+        link.includes("m-n-law.com") ||
+        link.includes("https://m-n-law.com")
+      ) {
+        console.log(link);
+        if (linkRel == "follow" || linkRel == "nofollow") {
+          anchorObj = {
+            URLFrom: urlFrom,
+            link: link,
+            text: linkText,
+            linkFollow: linkRel,
+            // dateFound: currentDate
+          };
+          rawLinkCount++;
+          crawledLinks.push(anchorObj), resolve;
+        } else {
+          anchorObj = {
+            URLFrom: urlFrom,
+            link: link,
+            text: linkText,
+            linkFollow: "No link Rel",
+            // dateFound: currentDate
+          };
+          crawledLinks.push(anchorObj), resolve;
+        }
       } else {
-        anchorObj = {
-          URLFrom: crawlingURL,
-          link: link,
-          text: linkText,
-          linkFollow: "No link Rel",
-          // dateFound: currentDate
-        };
-        crawledLinks.push(anchorObj), resolve;
+        // console.log('link removed', link);
+        resolve;
       }
     } else {
-      // console.log('link removed', link);
+      // console.log('url is not vaild'), 
       resolve;
     }
   });
@@ -259,71 +277,6 @@ const CSVCrawlLink = asyncHandler(async () => {
     // }
   }, 1000);
 
-  // Step : Called to get a free proxy
-  const proxyGenerator = () => {
-    // Establishing the variables
-    let ip_addresses = [];
-    let port_numbers = [];
-    let random_number;
-
-    // Uses request and cheerio to pull the free proxies from the link and randomzies the port and proxy so when you crawl it doesn't hit the same website from the same ip address
-    request("https://sslproxies.org/", function (error, response, html) {
-      if (!error && response.statusCode == 200) {
-        const $ = cheerio.load(html);
-
-        $("td:nth-child(5)").each(function (index, value) {
-          if ($(this).text().includes("elite")) {
-            $("td:nth-child(1)").each(function (index, value) {
-              ip_addresses[index] = $(this).text();
-            });
-
-            $("td:nth-child(2)").each(function (index, value) {
-              port_numbers[index] = $(this).text();
-            });
-          }
-        });
-      } else {
-        console.log("Error loading proxy, please try again", error);
-      }
-
-      ip_addresses.join(", ");
-      port_numbers.join(", ");
-
-      random_number = Math.floor(Math.random() * 8);
-
-      proxyRotation = `http://${ip_addresses[random_number]}:${port_numbers[random_number]}`;
-      proxyHost = ip_addresses[random_number];
-      proxyPort = port_numbers[random_number];
-
-      const proxyCheck = {
-        host: ip_addresses[random_number],
-        port: port_numbers[random_number],
-        // proxyAuth: "y0adXjeO:pAzAHCr4",
-      };
-
-      console.log("Checking Proxy", proxyCheck);
-
-      proxy_checker(proxyCheck)
-        .then((res) => {
-          console.log("Good Proxy", res); // true
-          // setTimeout(function () {
-          // console.log(csvLinks);
-          // csvLinks.forEach((link) => {
-          //   crawlerInstance.queue({
-          //     uri: link,
-          //     proxy: proxyRotation,
-          //   });
-          // });
-          // }, 0);
-          crawlerInstance.queue(csvLinks);
-        })
-        .catch((error) => {
-          console.error("error", error); // ECONNRESET
-          proxyGenerator();
-        });
-    });
-  };
-
   // Step : Create an instance of a new crawler
   const crawlerInstance = new Crawler({
     headers: {
@@ -337,6 +290,8 @@ const CSVCrawlLink = asyncHandler(async () => {
       // The Referer request header provides the previous web page’s address before the request is sent to the web server.
       Referer: "http://www.google.com/",
     },
+    jQuery: true,
+    family: 4,
     retries: 1, // The crawlers internal code will not retry but custom code will
     // rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
     maxConnections: 4, // maxConnections is the maximum number of tasks that can be running at the same time
@@ -344,93 +299,174 @@ const CSVCrawlLink = asyncHandler(async () => {
     // Will be called for each crawled page
     callback: (error, res, done) => {
       if (error) {
-        let link = error;
-        linkRel = "Couldnt get text do to website error";
-        linkText = "Couldnt get text do to website error";
+        initalCrawlCount++;
+        sleep(1000);
+        // let link = error;
+        linkRel = "Couldnt get rel attr due to website error";
+        linkText = "Couldnt get text due to website error";
         csvWriteLinks.push({
-          urlFrom: link,
+          urlFrom: res.options.uri,
           linkRel: linkRel,
           linkText: linkText,
         });
         // console.error("---    Error    ---", error);
-        console.error(error.stack);
-        done()
-        // done();
-        // proxyGenerator();
-        // console.error(error.stack);
-      }
-      csvCount++;
-      initalCrawlCount++;
-      hostUrl = res.request.req.protocol + "//" + res.request.host;
-      rawHostUrl = res.request.host;
-      urlProtocol = res.request.req.protocol;
-      pathURL = res.request.path;
-      crawlingURL = hostUrl + pathURL;
-      console.log("---    Working...    ---");
-      // console.log("Crawling URL:", crawlingURL);
-      if (res.statusCode == 200) {
-        console.log("\u001b[1;32m Status code: 200 ->", crawlingURL);
-      } else if (res.statusCode == 404 || res.statusCode == 403) {
-        console.log(
-          `\u001b[1;31m Status code: ${res.statusCode} ->`,
-          crawlingURL
-        );
+        console.error("Conditonal Error", error.stack);
+        console.log("Continuing");
+        if (csvLinks.length == initalCrawlCount) {
+          // console.log("Working last part of csvlink function");
+          if (crawledLinks.length == 0) {
+            console.log("No links found");
+            return;
+          } else {
+            statusCheckV2(crawledLinks);
+          }
+        }
+        done();
       } else {
-        console.log(
-          `\u001b[1;31m Status code: ${res.statusCode} ->`,
-          crawlingURL
-        );
-      }
-      // console.log("URL Protocol:", urlProtocol);
-      // console.log("Host URL:", hostUrl);
-      // console.log("Raw Host:", rawHostUrl);
-      // console.log("URL Path:", pathURL);
-      // Looking for href in the HTML
-      const $ = res.$;
-      const anchorTag = $("a");
-      anchorTag.each(async function () {
-        // For the link
-        let link = $(this).attr("href");
-        // To see things link follow, no follow etc...
-        let linkText = $(this).text();
-        linkText.trim();
-        let linkRel = $(this).attr("rel");
-        // console.log('link', link);
-        // Checking text to see if there are any line breaks with the anchor text and trims whitespace
+        csvCount++;
+        initalCrawlCount++;
         if (
-          linkText.toString().startsWith("\n") ||
-          linkText.toString().endsWith("\n") ||
-          linkText.toString().startsWith("\r") ||
-          linkText.toString().endsWith("\r")
+          res.request === null ||
+          res.$ === null ||
+          res.$ === undefined ||
+          res === null ||
+          res === undefined ||
+          res.request === undefined
         ) {
-          linkText = linkText.replace(/[\r\n\t]/gm, "");
-          linkText = linkText.trim();
+          console.log(`\u001b[1;31m Protocol undefined ->`, res.options.uri);
+          csvWriteLinks.push({
+            urlFrom: res.options.uri,
+            linkRel: "Error protocol undefined",
+            linkText: "Error protocol undefined",
+          });
+          done();
         }
-        if (link == undefined || link == null) {
-          // console.log("undefined link removed", link);
-          return;
-        }
-        await backLinkPromise(link, linkRel, linkText);
-        await sleep(1000);
-      });
-      console.log("-------------------------------------------");
-      if (csvLinks.length == initalCrawlCount) {
-        // console.log("Working last part of csvlink function");
-        if (crawledLinks.length == 0) {
-          console.log("No links found");
-          return;
+        console.log("---    Working...    ---");
+        if (res.statusCode == 200) {
+          console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
+        } else if (res.statusCode == 404 || res.statusCode == 403) {
+          console.log(
+            `\u001b[1;31m Status code: ${res.statusCode} ->`,
+            res.options.uri
+          );
         } else {
-          statusCheckV2(crawledLinks);
+          console.log(
+            `\u001b[1;31m Status code: ${res.statusCode} ->`,
+            res.options.uri
+          );
         }
+        // Looking for href in the HTML
+        const $ = res.$;
+        const anchorTag = $("a");
+        anchorTag.each(async function () {
+          // For the link
+          let link = $(this).attr("href");
+          // To see things link follow, no follow etc...
+          let linkText = $(this).text();
+          linkText.trim();
+          let linkRel = $(this).attr("rel");
+          // Checking text to see if there are any line breaks with the anchor text and trims whitespace
+          if (
+            linkText.toString().startsWith("\n") ||
+            linkText.toString().endsWith("\n") ||
+            linkText.toString().startsWith("\r") ||
+            linkText.toString().endsWith("\r")
+          ) {
+            linkText = linkText.replace(/[\r\n\t]/gm, "");
+            linkText = linkText.trim();
+          }
+          if (link == undefined || link == null) {
+            // console.log("undefined link removed", link);
+            done();
+          }
+          let urlFrom = res.options.uri;
+          await backLinkPromise(urlFrom, link, linkRel, linkText);
+          await sleep(1000);
+        });
+        console.log("-------------------------------------------");
+        if (csvLinks.length == initalCrawlCount) {
+          if (crawledLinks.length == 0) {
+            console.log("No links found");
+            return;
+          } else {
+            statusCheckV2(crawledLinks);
+          }
+        }
+        done();
       }
-      // Passes array into function to convert it. Then takes the formatted links array and checks the link status putting it into an object
-      // After StatusCheck is done it will check the DB to see if the links in the array are in there. If its not create the link in the array.
-
-      // linkConverter(crawledLinks);
-      done();
     },
   });
 });
+
+// const initalMultipeCrawl = async() => {
+//   fetchData(url).then((res) => {
+//     const html = res.data;
+//     const $ = cheerio.load(html);
+//     if (
+//       res.request === null ||
+//       res.$ === null ||
+//       res.$ === undefined ||
+//       res.request === undefined
+//     ) {
+//       console.log(`\u001b[1;31m Protocol undefined ->`, res.options.uri);
+//       // console.log(res, res.options.uri);
+//       csvWriteLinks.push({
+//         urlFrom: res.options.uri,
+//         linkRel: "Error protocol undefined",
+//         linkText: "Error protocol undefined",
+//       });
+//       done();
+//     }
+//     // hostUrl = res.request.req.protocol + "//" + res.request.host;
+//     // rawHostUrl = res.request.host;
+//     // urlProtocol = res.request.req.protocol;
+//     // pathURL = res.request.path;
+//     // crawlingURL = hostUrl + pathURL;
+//     console.log("---    Working...    ---");
+//     // console.log("Crawling URL:", crawlingURL);
+//     if (res.statusCode == 200) {
+//       console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
+//     } else if (res.statusCode == 404 || res.statusCode == 403) {
+//       console.log(
+//         `\u001b[1;31m Status code: ${res.statusCode} ->`,
+//         res.options.uri
+//       );
+//     } else {
+//       console.log(
+//         `\u001b[1;31m Status code: ${res.statusCode} ->`,
+//         res.options.uri
+//       );
+//     }
+//     // console.log("URL Protocol:", urlProtocol);
+//     // console.log("Host URL:", hostUrl);
+//     // console.log("Raw Host:", rawHostUrl);
+//     // console.log("URL Path:", pathURL);
+//     // Looking for href in the HTML
+//     const anchorTag = $("a");
+//     anchorTag.each(async function () {
+//       // For the link
+//       let link = $(this).attr("href");
+//       // To see things link follow, no follow etc...
+//       let linkText = $(this).text();
+//       linkText.trim();
+//       let linkRel = $(this).attr("rel");
+//       // console.log('link', link);
+//       // Checking text to see if there are any line breaks with the anchor text and trims whitespace
+//       if (linkText.toString().startsWith("\n") || inkText.toString().endsWith("\n") || linkText.toString().startsWith("\r") || linkText.toString().endsWith("\r")) {
+//         linkText = linkText.replace(/[\r\n\t]/gm, "");
+//         linkText = linkText.trim();
+//       }
+//       if (link == undefined || link == null) {
+//         // console.log("undefined link removed", link);
+//         return;
+//       }
+//       let urlFrom = res.options.uri;
+//       await backLinkPromise(urlFrom, link, linkRel, linkText);
+//       await sleep(1000);
+//     });
+//     console.log("-------------------------------------------");
+//   });
+// }
 
 // Checks the status of the link
 const statusCheckV2 = async (array) => {

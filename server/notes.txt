@@ -1,8 +1,100 @@
-To do:
-- Imporve the crawler status code (403 sometimes)
-- Keep testing the catch on the fetch to try and get as much accurate links 
+link == "helpingsurvivors.org" ||
+        link == "https://helpingsurvivors.org" ||
+        link == "brownandcrouppen.com" ||
+        link == "https://brownandcrouppen.com" ||
+        link == "cutterlaw.com" ||
+        link == "https://cutterlaw.com" ||
+        link == "https://lanierlawfirm.com" ||
+        link == "lanierlawfirm.com" ||
+        link == "nursinghomeabuse.org" ||
+        link == "https://nursinghomeabuse.org" ||
+        link == "socialmediavictims.org" ||
+        link == "https://socialmediavictims.org" ||
+        link == "m-n-law.com" ||
+        link == "https://m-n-law.com" ||
+        link == "samndan.com" ||
+        link == "https://samndan.com" ||
+        link == "omaralawgroup.org" ||
+        link == "https://omaralawgroup.org" ||
+        link == "https://veternsguide.org" ||
+        link == "veternsguide.org" ||
+        link == "https://steinlawoffices.com" ||
+        link == "steinlawoffices.com" ||
+        link == "https://levinperconti.com" ||
+        link == "levinperconti.com" ||
+        link == "https://cordiscosaile.com" ||
+        link == "cordiscosaile.com" ||
+        link == "https://advologix.com" ||
+        link == "advologix.com" ||
+        link == "https://wvpersonalinjury.com" ||
+        link == "wvpersonalinjury.com" ||
+        link == "nstlaw.com" || 
+        link == "https://nstlaw.com"  
+  
+  // Step : Called to get a free proxy
+  const proxyGenerator = () => {
+    // Establishing the variables
+    let ip_addresses = [];
+    let port_numbers = [];
+    let random_number;
 
+    // Uses request and cheerio to pull the free proxies from the link and randomzies the port and proxy so when you crawl it doesn't hit the same website from the same ip address
+    request("https://sslproxies.org/", function (error, response, html) {
+      if (!error && response.statusCode == 200) {
+        const $ = cheerio.load(html);
 
+        $("td:nth-child(5)").each(function (index, value) {
+          if ($(this).text().includes("elite")) {
+            $("td:nth-child(1)").each(function (index, value) {
+              ip_addresses[index] = $(this).text();
+            });
+
+            $("td:nth-child(2)").each(function (index, value) {
+              port_numbers[index] = $(this).text();
+            });
+          }
+        });
+      } else {
+        console.log("Error loading proxy, please try again", error);
+      }
+
+      ip_addresses.join(", ");
+      port_numbers.join(", ");
+
+      random_number = Math.floor(Math.random() * 8);
+
+      proxyRotation = `http://${ip_addresses[random_number]}:${port_numbers[random_number]}`;
+      proxyHost = ip_addresses[random_number];
+      proxyPort = port_numbers[random_number];
+
+      const proxyCheck = {
+        host: ip_addresses[random_number],
+        port: port_numbers[random_number],
+        // proxyAuth: "y0adXjeO:pAzAHCr4",
+      };
+
+      console.log("Checking Proxy", proxyCheck);
+
+      proxy_checker(proxyCheck)
+        .then((res) => {
+          console.log("Good Proxy", res); // true
+          // setTimeout(function () {
+          // console.log(csvLinks);
+          // csvLinks.forEach((link) => {
+          //   crawlerInstance.queue({
+          //     uri: link,
+          //     proxy: proxyRotation,
+          //   });
+          // });
+          // }, 0);
+          crawlerInstance.queue(csvLinks);
+        })
+        .catch((error) => {
+          console.error("error", error); // ECONNRESET
+          proxyGenerator();
+        });
+    });
+  };
 
 // For crawling sitemaps... Need to work on it
         if (crawlingURL.includes("/sitemap.xml")) {
@@ -55,6 +147,7 @@ const getListFiles = (req, res) => {
     res.status(200).send(fileInfos);
   });
 };
+
 // Not needed
 const download = (req, res) => {
   const fileName = req.params.name;
