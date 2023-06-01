@@ -96,21 +96,22 @@ const dbPromise = (linkCrawled) => {
 const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
   return new Promise(async (resolve) => {
     // code
-    // link !== undefined &&
     if (
       link === undefined ||
       link == undefined ||
       link === null ||
       link == null ||
-      link.startsWith('#') ||
-      link.startsWith('mailto')
+      link.startsWith("#")
     ) {
-      // console.log("link undefined");
       resolve;
     }
     if (isValidUrl(link)) {
-      console.log(link);
-      // link = new URL(link);
+      link.toString();
+      // if(link.startsWith("mailto:")){
+      //   console.log('mailto not valid', link);
+      //   link = null;
+      //   resolve;
+      // }
       if (link.hostname) {
         link = link.hostname.replace("www.", "");
         link.toString();
@@ -152,7 +153,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
         link.includes("m-n-law.com") ||
         link.includes("https://m-n-law.com")
       ) {
-        console.log(link);
+        // console.log(link);
         if (linkRel == "follow" || linkRel == "nofollow") {
           anchorObj = {
             URLFrom: urlFrom,
@@ -161,7 +162,6 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
             linkFollow: linkRel,
             // dateFound: currentDate
           };
-          rawLinkCount++;
           crawledLinks.push(anchorObj), resolve;
         } else {
           anchorObj = {
@@ -178,7 +178,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
         resolve;
       }
     } else {
-      // console.log('url is not vaild'), 
+      // console.log('url is not vaild'),
       resolve;
     }
   });
@@ -357,42 +357,47 @@ const CSVCrawlLink = asyncHandler(async () => {
         }
         // Looking for href in the HTML
         const $ = res.$;
-        const anchorTag = $("a");
-        anchorTag.each(async function () {
-          // For the link
-          let link = $(this).attr("href");
-          // To see things link follow, no follow etc...
-          let linkText = $(this).text();
-          linkText.trim();
-          let linkRel = $(this).attr("rel");
-          // Checking text to see if there are any line breaks with the anchor text and trims whitespace
-          if (
-            linkText.toString().startsWith("\n") ||
-            linkText.toString().endsWith("\n") ||
-            linkText.toString().startsWith("\r") ||
-            linkText.toString().endsWith("\r")
-          ) {
-            linkText = linkText.replace(/[\r\n\t]/gm, "");
-            linkText = linkText.trim();
+        if ($) {
+          const anchorTag = $("a");
+          anchorTag.each(async function () {
+            // For the link
+            let link = $(this).attr("href");
+            // To see things link follow, no follow etc...
+            let linkText = $(this).text();
+            linkText.trim();
+            let linkRel = $(this).attr("rel");
+            // Checking text to see if there are any line breaks with the anchor text and trims whitespace
+            if (
+              linkText.toString().startsWith("\n") ||
+              linkText.toString().endsWith("\n") ||
+              linkText.toString().startsWith("\r") ||
+              linkText.toString().endsWith("\r")
+            ) {
+              linkText = linkText.replace(/[\r\n\t]/gm, "");
+              linkText = linkText.trim();
+            }
+            if (link == undefined || link == null) {
+              // console.log("undefined link removed", link);
+              done();
+            }
+            let urlFrom = res.options.uri;
+            await backLinkPromise(urlFrom, link, linkRel, linkText);
+            await sleep(1000);
+          });
+          console.log("-------------------------------------------");
+          if (csvLinks.length == initalCrawlCount) {
+            if (crawledLinks.length == 0) {
+              console.log("No links found");
+              return;
+            } else {
+              statusCheckV2(crawledLinks);
+            }
           }
-          if (link == undefined || link == null) {
-            // console.log("undefined link removed", link);
-            done();
-          }
-          let urlFrom = res.options.uri;
-          await backLinkPromise(urlFrom, link, linkRel, linkText);
-          await sleep(1000);
-        });
-        console.log("-------------------------------------------");
-        if (csvLinks.length == initalCrawlCount) {
-          if (crawledLinks.length == 0) {
-            console.log("No links found");
-            return;
-          } else {
-            statusCheckV2(crawledLinks);
-          }
+          done();
+        } else {
+          console.log("error -> $");
+          done();
         }
-        done();
       }
     },
   });
@@ -527,6 +532,15 @@ const statusCheckV2 = async (array) => {
       if (array.length !== forEachCounter) {
         console.log(forEachCounter, newLinkCrawled[forEachCounter].link);
         // Makes sure url is proper before crawling
+        if (newLinkCrawled[forEachCounter].link.startsWith("mailto:")) {
+          console.log("mailto not valid", newLinkCrawled[forEachCounter].link);
+          array.splice(
+            array.findIndex(
+              (error) => error.link === newLinkCrawled[forEachCounter].link
+            ),
+            1
+          );
+        }
         if (isValidUrl(newLinkCrawled[forEachCounter].link) == false) {
           let dbPromiseObject = {
             urlFrom: linkCrawled[forEachCounter].URLFrom,
