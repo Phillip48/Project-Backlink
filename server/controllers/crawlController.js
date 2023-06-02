@@ -290,11 +290,11 @@ const CSVCrawlLink = asyncHandler(async () => {
       // The Referer request header provides the previous web page’s address before the request is sent to the web server.
       Referer: "http://www.google.com/",
     },
-    jQuery: true,
-    family: 4,
-    retries: 1, // The crawlers internal code will not retry but custom code will
-    // rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
-    maxConnections: 4, // maxConnections is the maximum number of tasks that can be running at the same time
+    // jQuery: true,
+    // family: 4,
+    retries: 1, // The crawlers internal code will retry 
+    rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
+    maxConnections: 2, // maxConnections is the maximum number of tasks that can be running at the same time
 
     // Will be called for each crawled page
     callback: (error, res, done) => {
@@ -626,14 +626,6 @@ const statusCheckV2 = async (array) => {
                     linkCrawled[forEachCounter].URLFrom,
                     response.status
                   );
-                  // linkStatus.push({
-                  //   urlFrom: linkCrawled[forEachCounter].URLFrom,
-                  //   urlTo: newLinkCrawled[forEachCounter].link,
-                  //   text: newLinkCrawled[forEachCounter].text,
-                  //   linkStatus: response.status,
-                  //   statusText: response.statusText,
-                  //   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                  // });
                   let dbPromiseObject = {
                     urlFrom: linkCrawled[forEachCounter].URLFrom,
                     urlTo: newLinkCrawled[forEachCounter].link,
@@ -645,57 +637,10 @@ const statusCheckV2 = async (array) => {
                   dbCounter++;
                   csvWriteLinks.push(dbPromiseObject);
                   await dbPromise(dbPromiseObject);
-                  // const linkInDB = await DBLINK.findOne({
-                  //   urlTo: newLinkCrawled[forEachCounter].link,
-                  // });
-                  // if (!linkInDB) {
-                  //   await createLink({
-                  //     urlFrom: linkCrawled[forEachCounter].URLFrom,
-                  //     urlTo: newLinkCrawled[forEachCounter].link,
-                  //     text: newLinkCrawled[forEachCounter].text,
-                  //     linkStatus: response.status,
-                  //     statusText: response.statusText,
-                  //     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                  //   });
-                  //   dbCounter++;
-                  //   console.log("Creating Link");
-                  // } else {
-                  //   await DBLINK.findOneAndUpdate(
-                  //     { urlTo: newLinkCrawled[forEachCounter].urlTo },
-                  //     { $set: { dateLastChecked: format } },
-                  //     { runValidators: true, new: true }
-                  //   );
-                  //   dbCounter++;
-                  //   console.log("Updating Link");
-                  // }
                 })
                 .catch(async (error) => {
                   console.log("---    Fetch retry failed    ---");
                   console.log("Error:", error);
-                  // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
-                  // const linkInDB = await DBLINK.findOne({
-                  //   urlTo: newLinkCrawled[forEachCounter].link,
-                  // });
-                  // if (!linkInDB) {
-                  //   await createLink({
-                  //     URLFrom: linkCrawled[forEachCounter].URLFrom,
-                  //     urlTo: newLinkCrawled[forEachCounter].link,
-                  //     text: newLinkCrawled[forEachCounter].text,
-                  //     linkStatus: "Error on this link",
-                  //     statusText: "Error on this link",
-                  //     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                  //   });
-                  //   dbCounter++;
-                  //   console.log("Creating Link");
-                  // } else {
-                  //   await DBLINK.findOneAndUpdate(
-                  //     { urlTo: newLinkCrawled[forEachCounter].urlTo },
-                  //     { $set: { dateLastChecked: format } },
-                  //     { runValidators: true, new: true }
-                  //   );
-                  //   dbCounter++;
-                  //   console.log("Updating Link");
-                  // }
                   let dbPromiseObject = {
                     URLFrom: linkCrawled[forEachCounter].URLFrom,
                     urlTo: newLinkCrawled[forEachCounter].link,
@@ -707,25 +652,9 @@ const statusCheckV2 = async (array) => {
                   dbCounter++;
                   csvWriteLinks.push(dbPromiseObject);
                   await dbPromise(dbPromiseObject);
-                  // linkStatus.push({
-                  //   URLFrom: linkCrawled[forEachCounter].URLFrom,
-                  //   urlTo: newLinkCrawled[forEachCounter].link,
-                  //   text: newLinkCrawled[forEachCounter].text,
-                  //   linkStatus: "Error on this link",
-                  //   statusText: "Error on this link",
-                  //   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                  // });
                   console.log("---    Continuing the check    ---");
                 });
             } else {
-              // linkStatus.push({
-              //   urlFrom: linkCrawled[forEachCounter].URLFrom,
-              //   urlTo: newLinkCrawled[forEachCounter].link,
-              //   text: newLinkCrawled[forEachCounter].text,
-              //   linkStatus: response.status,
-              //   statusText: response.statusText,
-              //   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-              // });
               let dbPromiseObject = {
                 urlFrom: linkCrawled[forEachCounter].URLFrom,
                 urlTo: newLinkCrawled[forEachCounter].link,
@@ -737,29 +666,6 @@ const statusCheckV2 = async (array) => {
               dbCounter++;
               csvWriteLinks.push(dbPromiseObject);
               await dbPromise(dbPromiseObject);
-              // const linkInDB = await DBLINK.findOne({
-              //   urlTo: newLinkCrawled[forEachCounter].link,
-              // });
-              // if (!linkInDB) {
-              //   await createLink({
-              //     urlFrom: linkCrawled[forEachCounter].URLFrom,
-              //     urlTo: newLinkCrawled[forEachCounter].link,
-              //     text: newLinkCrawled[forEachCounter].text,
-              //     linkStatus: response.status,
-              //     statusText: response.statusText,
-              //     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-              //   });
-              //   dbCounter++;
-              //   console.log("Creating Link");
-              // } else {
-              //   await DBLINK.findOneAndUpdate(
-              //     { urlTo: newLinkCrawled[forEachCounter].urlTo },
-              //     { $set: { dateLastChecked: format } },
-              //     { runValidators: true, new: true }
-              //   );
-              //   dbCounter++;
-              //   console.log("Updating Link");
-              // }
             }
           })
           // If theres an error run this code
@@ -854,7 +760,7 @@ const statusCheckV2 = async (array) => {
                 //   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                 // });
                 let dbPromiseObject = {
-                  URLFrom: newLinkCrawled[forEachCounter].URLFrom,
+                  URLFrom: linkCrawled[forEachCounter].URLFrom,
                   urlTo: newLinkCrawled[forEachCounter].link,
                   text: newLinkCrawled[forEachCounter].text,
                   linkStatus: "Error on this link",
@@ -864,29 +770,6 @@ const statusCheckV2 = async (array) => {
                 dbCounter++;
                 csvWriteLinks.push(dbPromiseObject);
                 await dbPromise(dbPromiseObject);
-                // const linkInDB = await DBLINK.findOne({
-                //   urlTo: newLinkCrawled[forEachCounter].link,
-                // });
-                // if (!linkInDB) {
-                //   await createLink({
-                //     URLFrom: newLinkCrawled[forEachCounter].URLFrom,
-                //     urlTo: newLinkCrawled[forEachCounter].link,
-                //     text: newLinkCrawled[forEachCounter].text,
-                //     linkStatus: "Error on this link",
-                //     statusText: "Error on this link",
-                //     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                //   });
-                //   dbCounter++;
-                //   console.log("Creating Link");
-                // } else {
-                //   await DBLINK.findOneAndUpdate(
-                //     { urlTo: newLinkCrawled[forEachCounter].urlTo },
-                //     { $set: { dateLastChecked: format } },
-                //     { runValidators: true, new: true }
-                //   );
-                //   dbCounter++;
-                //   console.log("Updating Link");
-                // }
                 console.log("---    Continuing the check    ---");
               });
           });
