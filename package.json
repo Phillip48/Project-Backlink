@@ -8,7 +8,9 @@
     "convert-array-to-csv": "^2.0.0",
     "csv-stringify": "^6.4.0",
     "https-proxy-agent": "^5.0.1",
+    "json2csv": "^6.0.0-alpha.2",
     "nodemon": "^2.0.20",
+    "papaparse": "^5.4.1",
     "xmlhttprequest": "^1.8.0"
   },
   "scripts": {

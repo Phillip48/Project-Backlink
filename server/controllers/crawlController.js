@@ -185,14 +185,16 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
 };
 // ================================================= //
 // Upload csv file
-const upload = async (req, res) => {
+const upload = async (req, res) => {};
+
+// Inital crawl to get anchor tags with href attr
+const CSVCrawlLink = asyncHandler(async (req, response) => {
+  // Step : calls the crawl as soon as the function is called
   try {
-    await uploadFile(req, res);
+    await uploadFile(req, response);
     fileName = req.file;
     if (req.file == undefined) {
-      return res.status(400).send({ message: "Please upload a file!" });
-    } else {
-      res.status(200).json("File uploading and being crawled");
+      return response.status(400).send({ message: "Please upload a file!" });
     }
     // rename file so it's always the same // Was in a timeout - removed timeout
     fs.rename(
@@ -220,62 +222,19 @@ const upload = async (req, res) => {
         .on("end", function () {
           console.log("Links from reader:", csvLinks);
           console.log("CSV scan finished");
-          CSVCrawlLink();
+          setTimeout(async function () {
+            await sleep(3000);
+            // proxyGenerator();
+            crawlerInstance.queue(csvLinks);
+          }, 1000);
         });
     }, 1000);
   } catch (err) {
     console.log(err);
-    res.sendStatus(500).send({
+    response.sendStatus(500).send({
       message: `Could not upload the file. ${err}`,
     });
   }
-};
-// Inital crawl to get anchor tags with href attr
-const CSVCrawlLink = asyncHandler(async () => {
-  // Step : calls the crawl as soon as the function is called
-  setTimeout(async function () {
-    await sleep(3000);
-    // proxyGenerator();
-    crawlerInstance.queue(csvLinks);
-    //   const httpAgent = new http.Agent({ keepalive: true });
-    // const httpsAgent = new https.Agent({ keepAlive: true });
-    // httpAgent.maxSockets = 5;
-    // httpsAgent.maxSockets = 5;
-    // const schemeHeader = (_parsedURL) => {
-    //   _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
-    // };
-    // const agent = (_parsedURL) =>
-    //   _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
-    // const proxyAgent = new HttpsProxyAgent(`http://${proxyHost}:${proxyPort}`);
-    // for (let i = 0; i < csvLinks.length; i++) {
-    //   if (i == csvLinks.length) {
-    //     // csvLinksAfterCheck
-    //     console.log('done');
-    //     crawlerInstance.queue(csvLinksAfterCheck);
-    //   }
-    //   try{
-    //     fetch(csvLinks[i], ({
-    //     method: "GET",
-    //     agent,
-    //     credentials: "include",
-    //     headers: {
-    //       "User-Agent":
-    //         // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36:",
-    //         // "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-    //         // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
-    //         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-    //     },
-    //     // keepalive: true,
-    //     host: rawHostUrl,
-    //     path: pathURL,
-    //   }))
-    //   } catch(error) {
-    //     console.log('There was an error', error);
-    //     continue
-    //   }
-
-    // }
-  }, 1000);
 
   // Step : Create an instance of a new crawler
   const crawlerInstance = new Crawler({
@@ -292,7 +251,7 @@ const CSVCrawlLink = asyncHandler(async () => {
     },
     // jQuery: true,
     // family: 4,
-    retries: 1, // The crawlers internal code will retry 
+    retries: 1, // The crawlers internal code will retry
     rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
     maxConnections: 2, // maxConnections is the maximum number of tasks that can be running at the same time
 
@@ -316,9 +275,11 @@ const CSVCrawlLink = asyncHandler(async () => {
           // console.log("Working last part of csvlink function");
           if (crawledLinks.length == 0) {
             console.log("No links found");
+            response.status(200).json("No links");
             return;
           } else {
-            statusCheckV2(crawledLinks);
+            statusCheckV2(crawledLinks, response);
+            // response.status(200).json("File uploading and being crawled");
           }
         }
         done();
@@ -388,9 +349,11 @@ const CSVCrawlLink = asyncHandler(async () => {
           if (csvLinks.length == initalCrawlCount) {
             if (crawledLinks.length == 0) {
               console.log("No links found");
+              response.status(200).json("No links found");
               return;
             } else {
-              statusCheckV2(crawledLinks);
+              statusCheckV2(crawledLinks, response);
+              // response.status(200).json("File uploading and being crawled");
             }
           }
           done();
@@ -474,7 +437,7 @@ const CSVCrawlLink = asyncHandler(async () => {
 // }
 
 // Checks the status of the link
-const statusCheckV2 = async (array) => {
+const statusCheckV2 = async (array, response) => {
   console.log("---    Status Check...    ---");
   console.log("Status check array length", array.length);
   // Websockets
@@ -509,24 +472,33 @@ const statusCheckV2 = async (array) => {
           "array length",
           "- Done -"
         );
-        const headers = [
-          "urlFrom",
-          "urlTo",
-          "text",
-          "linkStatus",
-          "statusText",
-          "linkFollow",
-        ];
-        const csvFromArrayOfObjects = convertArrayToCSV(csvWriteLinks, {
-          headers,
-          seperator: ",",
-        });
-        fs.writeFile("output.csv", csvFromArrayOfObjects, (err) => {
-          if (err) {
-            console.log(err);
-          }
-          console.log("Created CSV File");
-        });
+        response.status(200).send(JSON.stringify(csvWriteLinks));
+
+        // const headers = [
+        //   "urlFrom",
+        //   "urlTo",
+        //   "text",
+        //   "linkStatus",
+        //   "statusText",
+        //   "linkFollow",
+        // ];
+        // const csvFromArrayOfObjects = convertArrayToCSV(csvWriteLinks, {
+        //   headers,
+        //   seperator: ",",
+        // });
+
+        // fs.writeFile("output.csv", csvFromArrayOfObjects, (err) => {
+        //   if (err) {
+        //     console.log(err);
+        //   }
+        //   console.log("Created CSV File");
+        // });
+
+        // response.status(200).json("File uploading and being crawled", csvFile);
+        // response.status(200).send(csvFromArrayOfObjects.toString());
+        // const csv = file2CSV(csvWriteLinks, { fields: headers});
+        //
+        // response.status(200).send(csvWriteLinks);
       }
 
       if (array.length !== forEachCounter) {

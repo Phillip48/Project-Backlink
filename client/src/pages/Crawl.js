@@ -9,6 +9,10 @@ import {
   deleteLinks,
 } from "../../src/features/links/linksSlice";
 
+let csv = "";
+let link;
+let excel;
+
 function CrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
 
@@ -28,12 +32,49 @@ function CrawlPage() {
   // submit form
   const handleFormSubmit = async (event) => {
     let formData = new FormData();
-    formData.append('csvFile', inputFile);
+    formData.append("csvFile", inputFile);
     event.preventDefault();
-    dispatch(crawlLink(formData));
-    // clear
-    setFormState({});
-    // window.location.reload();
+    dispatch(crawlLink(formData))
+      .then((res) => {
+        // console.log(res);
+        // console.log(res.payload.data);
+        let newData = res.payload.data;
+        downloadCSV(newData);
+        // document.body.appendChild(link);
+        // document.querySelector("#download-csv").click();
+      })
+      .catch((error) => console.log(error));
+    // setFormState({});
+  };
+  function createCSV(array){
+    var keys = Object.keys(array[0]); //Collects Table Headers
+    
+    var result = ''; //CSV Contents
+    result += keys.join(','); //Comma Seperates Headers
+    result += '\n'; //New Row
+    
+    array.forEach(function(item){ //Goes Through Each Array Object
+      keys.forEach(function(key){//Goes Through Each Object value
+        result += item[key] + ','; //Comma Seperates Each Key Value in a Row
+      })
+      result += '\n';//Creates New Row
+    })
+    return result;
+  }
+
+  const downloadCSV = (newData) => {
+    // let payloadData = newData;
+    // let header = Object.keys(payloadData[0]).join(",");
+    // let values = payloadData.map((o) => Object.values(o).join(",")).join("\n");
+    // csv += header + "\n" + values;
+    // console.log(csv);
+    csv = 'data:text/csv;charset=utf-8,' + createCSV(newData);
+    excel = encodeURI(csv); //Links to CSV 
+    link = document.createElement("a");
+    link.setAttribute("href", excel); //Links to CSV File
+    link.setAttribute("download", "test.csv"); //Filename that CSV is saved as
+    console.log(link);
+    link.click();
   };
 
   const handleFormSubmitRecheck = async (event) => {
@@ -59,19 +100,6 @@ function CrawlPage() {
         protocol/scheme, sub-domain, domain and the top level domain
       </h3>
 
-      {/* <div class="topnav">
-        <div class="search-container">
-          <form>
-            <span>Link:</span>
-            <br></br>
-            <input type="text" placeholder="Search.." />
-            <button type="submit">
-              <i class="fa fa-search"></i>
-            </button>
-          </form>
-        </div>
-      </div> */}
-
       <div className="topnav">
         <div className="search-container">
           <form
@@ -88,7 +116,8 @@ function CrawlPage() {
               accept=".csv"
               value={formState.csvFile}
               onChange={handleChange}
-              webkitdirectory multiple
+              webkitdirectory
+              multiple
             />
             <button type="submit" onClick={handleFormSubmit}>
               Submit
@@ -104,6 +133,15 @@ function CrawlPage() {
       </div>
       <div className="crawl_link_links">
         <button onClick={handleFormSubmitRecheck}>Recheck DB Links</button>
+      </div>
+
+      <div className="crawl_link_links">
+        <button
+          // onclick={downloadCSV()}
+          id="download-csv"
+        >
+          Download
+        </button>
       </div>
     </section>
   );

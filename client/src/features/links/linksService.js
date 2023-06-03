@@ -10,6 +10,7 @@ const crawlSite = async (formData) => {
     .post("/api/crawler/upload", formData, headers)
     .then((res) => {
       console.log(res);
+      return res;
     });
   return response;
 };
