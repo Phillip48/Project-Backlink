@@ -35,14 +35,16 @@ function CrawlPage() {
     formData.append("csvFile", inputFile);
     event.preventDefault();
     dispatch(crawlLink(formData))
-      .then((res) => {
+      .then(async (res) => {
         let newData = res.payload.data;
-        if(newData == 'No links found'){
+        let clientData = newData[1];
+        let otherData = newData[0];
+        console.log('client links', clientData);
+        console.log('other links', otherData);
+        if(clientData == 'No links found'){
           return alert('No links found');
         }
-        downloadCSV(newData);
-        // document.body.appendChild(link);
-        // document.querySelector("#download-csv").click();
+        downloadCSV(clientData);
       })
       .catch((error) => console.log(error));
     // setFormState({});
@@ -57,6 +59,7 @@ function CrawlPage() {
     result += keys.join(','); //Comma Seperates Headers
     result += '\n'; //New Row
     
+    // Might need to change this as its an object not an array
     array.forEach(function(item){ //Goes Through Each Array Object
       keys.forEach(function(key){//Goes Through Each Object value
         result += item[key] + ','; //Comma Seperates Each Key Value in a Row

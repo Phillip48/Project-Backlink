@@ -36,6 +36,8 @@ let crawlingURL;
 // Array for links read from the CSV
 const csvLinks = [];
 const csvWriteLinks = [];
+const newURLCSVLinks = [];
+const nonClientLinks = [];
 
 // Arrays for the links and status resposne
 let crawledLinks = [];
@@ -56,7 +58,7 @@ let format = month + "/" + day + "/" + year;
 const sleep = (time) => {
   return new Promise((resolve) => setTimeout(resolve, time));
 };
-// URL Checker 
+// URL Checker
 const isValidUrl = (urlString) => {
   try {
     return Boolean(new URL(urlString));
@@ -109,11 +111,6 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
     }
     if (isValidUrl(link)) {
       link.toString();
-      // if(link.startsWith("mailto:")){
-      //   console.log('mailto not valid', link);
-      //   link = null;
-      //   resolve;
-      // }
       if (link.hostname) {
         link = link.hostname.replace("www.", "");
         link.toString();
@@ -176,11 +173,20 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
           crawledLinks.push(anchorObj), resolve;
         }
       } else {
+        nonClientLinks.push({
+          URLFrom: urlFrom,
+          urlTo: "Nothing was found on this link",
+          text: "N/A",
+          linkFollow: "N/A",
+          linkStatus: "N/A",
+          statusText: "N/A",
+          linkFollow: "N/A",
+          // dateFound: currentDate
+        }),
+          resolve;
         // console.log('link removed', link);
-        resolve;
       }
     } else {
-      // console.log('url is not vaild'),
       resolve;
     }
   });
@@ -252,7 +258,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
       // The Accept request header falls into a content negotiation category, and its purpose is to notify the web server on what type of data format can be returned to the client.
       Accept: "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       // The Referer request header provides the previous web page’s address before the request is sent to the web server.
-      Referer: "http://www.google.com/",
+      // Referer: "http://www.google.com/",
       method: "GET",
       credentials: "include",
       agent: "http:" ? httpAgent : httpsAgent,
@@ -409,33 +415,9 @@ const statusCheckV2 = async (array, response) => {
           "array length",
           "- Done -"
         );
-        response.status(200).send(JSON.stringify(csvWriteLinks));
-
-        // const headers = [
-        //   "urlFrom",
-        //   "urlTo",
-        //   "text",
-        //   "linkStatus",
-        //   "statusText",
-        //   "linkFollow",
-        // ];
-        // const csvFromArrayOfObjects = convertArrayToCSV(csvWriteLinks, {
-        //   headers,
-        //   seperator: ",",
-        // });
-
-        // fs.writeFile("output.csv", csvFromArrayOfObjects, (err) => {
-        //   if (err) {
-        //     console.log(err);
-        //   }
-        //   console.log("Created CSV File");
-        // });
-
-        // response.status(200).json("File uploading and being crawled", csvFile);
-        // response.status(200).send(csvFromArrayOfObjects.toString());
-        // const csv = file2CSV(csvWriteLinks, { fields: headers});
-        //
-        // response.status(200).send(csvWriteLinks);
+          // Add code to fix dups in nonClientLinks
+        const holdFinalArrays = [nonClientLinks, csvWriteLinks];
+        response.status(200).send(JSON.stringify(holdFinalArrays));
       }
 
       if (array.length !== forEachCounter) {
@@ -624,7 +606,9 @@ const statusCheckV2 = async (array, response) => {
                 } else {
                   console.log("line 634", newURLFrom);
                   let dbPromiseObject = {
-                    URLFrom: `${newURLFrom ? newURLFrom : 'unknown' } <- Error on URL FROM `,
+                    URLFrom: `${
+                      newURLFrom ? newURLFrom : "unknown"
+                    } <- Error on URL FROM `,
                     urlTo: newLinkCrawled[forEachCounter].link,
                     text: newLinkCrawled[forEachCounter].text,
                     linkStatus: "Error on this link",
@@ -649,4 +633,3 @@ module.exports = {
   CSVCrawlLink,
   // upload,
 };
-
