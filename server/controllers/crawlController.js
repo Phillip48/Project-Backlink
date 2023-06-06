@@ -624,7 +624,7 @@ const statusCheckV2 = async (array, response) => {
                 } else {
                   console.log("line 634", newURLFrom);
                   let dbPromiseObject = {
-                    URLFrom: `${newURLFrom} <- Error on URL FROM `,
+                    URLFrom: `${newURLFrom ? newURLFrom : 'unknown' } <- Error on URL FROM `,
                     urlTo: newLinkCrawled[forEachCounter].link,
                     text: newLinkCrawled[forEachCounter].text,
                     linkStatus: "Error on this link",
