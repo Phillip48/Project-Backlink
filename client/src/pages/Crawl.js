@@ -139,14 +139,14 @@ function CrawlPage() {
         <button onClick={handleFormSubmitRecheck}>Recheck DB Links</button>
       </div>
 
-      <div className="crawl_link_links">
+      {/* <div className="crawl_link_links">
         <button
           // onclick={downloadCSV()}
           id="download-csv"
         >
           Download
         </button>
-      </div>
+      </div> */}
     </section>
   );
 }

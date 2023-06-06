@@ -4,12 +4,10 @@ const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const request = require("request");
 const proxy_checker = require("proxy-check");
-const { performance } = require("perf_hooks");
 const fs = require("fs");
 const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
 const uploadFile = require("../middleware/upload");
-const multer = require("multer");
 const http = require("http");
 const https = require("https");
 const HttpsProxyAgent = require("https-proxy-agent");
@@ -17,7 +15,6 @@ const axios = require("axios");
 
 // Call functions needed to add to the db
 const { createLink } = require("../controllers/linkController");
-const { convertArrayToCSV } = require("convert-array-to-csv");
 const { setMaxListeners } = require("events");
 
 // ===================================== Important ===================================== //
@@ -28,22 +25,20 @@ const timeBetweenDifferentCrawls = 2000; // Time between links in csv crawled
 let crawledLinksCount = 0;
 let csvCount = 0;
 let initalCrawlCount = 0;
+
 // Host URL and URL Protocol
 let urlProtocol;
 let hostUrl;
 let rawHostUrl;
 let pathURL;
 let crawlingURL;
+
 // Array for links read from the CSV
 const csvLinks = [];
-const csvLinksAfterCheck = [];
 const csvWriteLinks = [];
+
 // Arrays for the links and status resposne
 let crawledLinks = [];
-let formattedLinks = [];
-const linkStatus = [];
-let sitemapList = [];
-let FinalSitemapList = [];
 
 // For the proxygenerator
 let proxyHost;
@@ -194,7 +189,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
 
 // Inital crawl to get anchor tags with href attr
 const CSVCrawlLink = asyncHandler(async (req, response) => {
-  // Step : Gets link from CSV file
+  // Step : Gets links from CSV file
   try {
     await uploadFile(req, response);
     fileName = req.file;
@@ -265,7 +260,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
     // jQuery: true,
     // family: 4,
     retries: 0, // The crawlers internal code will retry -> I don't think it ends up working the 2 time.
-    rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
+    rateLimit: 2000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
     maxConnections: 1, // maxConnections is the maximum number of tasks that can be running at the same time
 
     // Will be called for each crawled page
@@ -273,7 +268,6 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
       if (error) {
         initalCrawlCount++;
         sleep(1000);
-        // let link = error;
         linkRel = "Couldnt get rel attr due to website error";
         linkText = "Couldnt get text due to website error";
         csvWriteLinks.push({
@@ -284,18 +278,15 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           statusText: "Error",
           linkFollow: "Error",
         });
-        // console.error("---    Error    ---", error);
         console.error("Conditonal Error", error.stack);
         console.log("Continuing");
         if (csvLinks.length == initalCrawlCount) {
-          // console.log("Working last part of csvlink function");
           if (crawledLinks.length == 0) {
             console.log("No links found");
             response.status(200).json("No links");
             return;
           } else {
             statusCheckV2(crawledLinks, response);
-            // response.status(200).json("File uploading and being crawled");
           }
         }
         done();
@@ -405,7 +396,7 @@ const statusCheckV2 = async (array, response) => {
       forEachCounter <= array.length;
       forEachCounter++
     ) {
-      await sleep(2000);
+      await sleep(4000);
       let linkCrawled = array;
       let newLinkCrawled = array;
       if (array.length === forEachCounter) {
@@ -633,7 +624,7 @@ const statusCheckV2 = async (array, response) => {
                 } else {
                   console.log("line 634", newURLFrom);
                   let dbPromiseObject = {
-                    URLFrom: "Error on URL FROM -> unknown",
+                    URLFrom: `${newURLFrom} <- Error on URL FROM `,
                     urlTo: newLinkCrawled[forEachCounter].link,
                     text: newLinkCrawled[forEachCounter].text,
                     linkStatus: "Error on this link",
