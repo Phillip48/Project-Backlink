@@ -12,7 +12,7 @@ const linkSchema = new Schema(
     {
         urlFrom: {
             type: String,
-            required: true,
+            // required: true,
         },
         urlTo: {
             type: String,

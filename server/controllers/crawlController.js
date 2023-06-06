@@ -76,9 +76,10 @@ const dbPromise = (linkCrawled) => {
       urlTo: linkCrawled.urlTo,
       urlFrom: linkCrawled.urlFrom,
     });
+    console.log('URL TO ->', linkCrawled.urlTo, 'URL FROM ->', linkCrawled.urlFrom);
     if (!linkInDB) {
-      createLink(linkCrawled);
-      console.log("Creating Link"), resolve;
+      createLink(linkCrawled), resolve;
+      // console.log("Creating Link"), resolve;
     } else {
       // console.log({ urlTo: linkCrawled.urlTo, urlFrom: linkCrawled.urlFrom });
       // { urlFrom: linkCrawled.urlFrom },
@@ -86,8 +87,8 @@ const dbPromise = (linkCrawled) => {
         { urlTo: linkCrawled.urlTo },
         { $set: { dateLastChecked: format } },
         { runValidators: true, new: true }
-      );
-      console.log("Updating Link"), resolve;
+      ), resolve;
+      // console.log("Updating Link"), resolve;
     }
   });
 };
@@ -153,7 +154,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
         link.includes("m-n-law.com") ||
         link.includes("https://m-n-law.com")
       ) {
-        // console.log(link);
+        console.log(link);
         if (linkRel == "follow" || linkRel == "nofollow") {
           anchorObj = {
             URLFrom: urlFrom,
@@ -185,7 +186,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
 };
 // ================================================= //
 // Upload csv file
-const upload = async (req, res) => {};
+// const upload = async (req, res) => {};
 
 // Inital crawl to get anchor tags with href attr
 const CSVCrawlLink = asyncHandler(async (req, response) => {
@@ -265,8 +266,11 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
         linkText = "Couldnt get text due to website error";
         csvWriteLinks.push({
           urlFrom: res.options.uri,
-          linkRel: linkRel,
-          linkText: linkText,
+          urlTo: 'Couldnt get urlto error',
+          text: linkText,
+          linkStatus: 'Error',
+          statusText: 'Error',
+          linkFollow: 'Error',
         });
         // console.error("---    Error    ---", error);
         console.error("Conditonal Error", error.stack);
@@ -514,6 +518,7 @@ const statusCheckV2 = async (array, response) => {
           );
         }
         if (isValidUrl(newLinkCrawled[forEachCounter].link) == false) {
+          console.log("failed url check", linkCrawled[forEachCounter].URLFrom);
           let dbPromiseObject = {
             urlFrom: linkCrawled[forEachCounter].URLFrom,
             urlTo: newLinkCrawled[forEachCounter].link,
@@ -595,6 +600,7 @@ const statusCheckV2 = async (array, response) => {
               })
                 .then(async (response) => {
                   console.log(
+                    "Maybe 403 link -->",
                     linkCrawled[forEachCounter].URLFrom,
                     response.status
                   );
@@ -613,17 +619,34 @@ const statusCheckV2 = async (array, response) => {
                 .catch(async (error) => {
                   console.log("---    Fetch retry failed    ---");
                   console.log("Error:", error);
-                  let dbPromiseObject = {
-                    URLFrom: linkCrawled[forEachCounter].URLFrom,
-                    urlTo: newLinkCrawled[forEachCounter].link,
-                    text: newLinkCrawled[forEachCounter].text,
-                    linkStatus: "Error on this link",
-                    statusText: "Error on this link",
-                    linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                  };
-                  dbCounter++;
-                  csvWriteLinks.push(dbPromiseObject);
-                  await dbPromise(dbPromiseObject);
+                  let newURLFrom = linkCrawled[forEachCounter].URLFrom;
+                  if (newURLFrom !== undefined) {
+                    console.log("line 634", newURLFrom);
+                    let dbPromiseObject = {
+                      URLFrom: newURLFrom,
+                      urlTo: newLinkCrawled[forEachCounter].link,
+                      text: newLinkCrawled[forEachCounter].text,
+                      linkStatus: "Error on this link",
+                      statusText: "Error on this link",
+                      linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+                    };
+                    dbCounter++;
+                    csvWriteLinks.push(dbPromiseObject);
+                    await dbPromise(dbPromiseObject);
+                  } else {
+                    console.log("line 634", newURLFrom);
+                    let dbPromiseObject = {
+                      URLFrom: "Error on URL FROM -> unknown",
+                      urlTo: newLinkCrawled[forEachCounter].link,
+                      text: newLinkCrawled[forEachCounter].text,
+                      linkStatus: "Error on this link",
+                      statusText: "Error on this link",
+                      linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+                    };
+                    dbCounter++;
+                    csvWriteLinks.push(dbPromiseObject);
+                    await dbPromise(dbPromiseObject);
+                  }
                   console.log("---    Continuing the check    ---");
                 });
             } else {
@@ -662,14 +685,6 @@ const statusCheckV2 = async (array, response) => {
                 console.log("Retry successful");
                 console.log(newLinkCrawled[forEachCounter].link);
                 console.log(response.status);
-                // linkStatus.push({
-                //   urlFrom: linkCrawled[forEachCounter].URLFrom,
-                //   urlTo: newLinkCrawled[forEachCounter].link,
-                //   text: newLinkCrawled[forEachCounter].text,
-                //   linkStatus: response.status,
-                //   statusText: response.statusText,
-                //   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                // });
                 let dbPromiseObject = {
                   urlFrom: linkCrawled[forEachCounter].URLFrom,
                   urlTo: newLinkCrawled[forEachCounter].link,
@@ -731,17 +746,34 @@ const statusCheckV2 = async (array, response) => {
                 //   statusText: "Error on this link",
                 //   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                 // });
-                let dbPromiseObject = {
-                  URLFrom: linkCrawled[forEachCounter].URLFrom,
-                  urlTo: newLinkCrawled[forEachCounter].link,
-                  text: newLinkCrawled[forEachCounter].text,
-                  linkStatus: "Error on this link",
-                  statusText: "Error on this link",
-                  linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                };
-                dbCounter++;
-                csvWriteLinks.push(dbPromiseObject);
-                await dbPromise(dbPromiseObject);
+                let newURLFrom = linkCrawled[forEachCounter].URLFrom;
+                if (newURLFrom !== undefined) {
+                  console.log("line 634", newURLFrom);
+                  let dbPromiseObject = {
+                    URLFrom: newURLFrom,
+                    urlTo: newLinkCrawled[forEachCounter].link,
+                    text: newLinkCrawled[forEachCounter].text,
+                    linkStatus: "Error on this link",
+                    statusText: "Error on this link",
+                    linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+                  };
+                  dbCounter++;
+                  csvWriteLinks.push(dbPromiseObject);
+                  await dbPromise(dbPromiseObject);
+                } else {
+                  console.log("line 634", newURLFrom);
+                  let dbPromiseObject = {
+                    URLFrom: "Error on URL FROM -> unknown",
+                    urlTo: newLinkCrawled[forEachCounter].link,
+                    text: newLinkCrawled[forEachCounter].text,
+                    linkStatus: "Error on this link",
+                    statusText: "Error on this link",
+                    linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+                  };
+                  dbCounter++;
+                  csvWriteLinks.push(dbPromiseObject);
+                  await dbPromise(dbPromiseObject);
+                }
                 console.log("---    Continuing the check    ---");
               });
           });
@@ -752,6 +784,12 @@ const statusCheckV2 = async (array, response) => {
   runningArrayV2(array);
 };
 
+module.exports = {
+  CSVCrawlLink,
+  // upload,
+};
+
+// Old code
 // const linkDB = async (array) => {
 //   console.log("---    Updating/Creating links in the Database    ---");
 //   let index = 0;
@@ -955,13 +993,6 @@ const statusCheckV2 = async (array, response) => {
 //   runningArray(array);
 // };
 
-// Step : Check to see if the DB has the link, if it does update the last checked... If it doesn't then create the link in the DB
-//
-
-module.exports = {
-  CSVCrawlLink,
-  upload,
-};
 
 // Step : Converts incomplete links to make them have its domain if it doens't already.
 // For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array

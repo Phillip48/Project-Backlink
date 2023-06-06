@@ -47,7 +47,10 @@ function CrawlPage() {
     // setFormState({});
   };
   function createCSV(array){
-    var keys = Object.keys(array[0]); //Collects Table Headers
+    console.log(array);
+    // var keys = Object.keys(array[0]); //Collects Table Headers
+    const keys = ['urlFrom', 'urlTo', 'text', 'linkStatus', 'statusText', 'linkFollow'];
+    console.log(keys);
     
     var result = ''; //CSV Contents
     result += keys.join(','); //Comma Seperates Headers
@@ -62,7 +65,7 @@ function CrawlPage() {
     return result;
   }
 
-  const downloadCSV = (newData) => {
+  const downloadCSV =(newData) => {
     // let payloadData = newData;
     // let header = Object.keys(payloadData[0]).join(",");
     // let values = payloadData.map((o) => Object.values(o).join(",")).join("\n");
@@ -73,7 +76,7 @@ function CrawlPage() {
     link = document.createElement("a");
     link.setAttribute("href", excel); //Links to CSV File
     link.setAttribute("download", "test.csv"); //Filename that CSV is saved as
-    console.log(link);
+    // console.log(link);
     link.click();
   };
 
