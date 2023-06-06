@@ -57,11 +57,11 @@ let day = date.getDate();
 let format = month + "/" + day + "/" + year;
 // ================================== Code =================================================== //
 // ============== Important functions ============== //
-// JS Promise to delay
+// JS Promise to delay however many senconds you put
 const sleep = (time) => {
   return new Promise((resolve) => setTimeout(resolve, time));
 };
-// URL Checker
+// URL Checker 
 const isValidUrl = (urlString) => {
   try {
     return Boolean(new URL(urlString));
@@ -69,14 +69,19 @@ const isValidUrl = (urlString) => {
     return false;
   }
 };
-// JS Promise to database upload create
+// JS Promise to database upload create -> Might not really need since we are making a CSV file with the links
 const dbPromise = (linkCrawled) => {
   return new Promise(async (resolve) => {
     const linkInDB = await DBLINK.findOne({
       urlTo: linkCrawled.urlTo,
       urlFrom: linkCrawled.urlFrom,
     });
-    console.log('URL TO ->', linkCrawled.urlTo, 'URL FROM ->', linkCrawled.urlFrom);
+    console.log(
+      "URL TO ->",
+      linkCrawled.urlTo,
+      "URL FROM ->",
+      linkCrawled.urlFrom
+    );
     if (!linkInDB) {
       createLink(linkCrawled), resolve;
       // console.log("Creating Link"), resolve;
@@ -87,7 +92,8 @@ const dbPromise = (linkCrawled) => {
         { urlTo: linkCrawled.urlTo },
         { $set: { dateLastChecked: format } },
         { runValidators: true, new: true }
-      ), resolve;
+      ),
+        resolve;
       // console.log("Updating Link"), resolve;
     }
   });
@@ -185,12 +191,10 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
   });
 };
 // ================================================= //
-// Upload csv file
-// const upload = async (req, res) => {};
 
 // Inital crawl to get anchor tags with href attr
 const CSVCrawlLink = asyncHandler(async (req, response) => {
-  // Step : calls the crawl as soon as the function is called
+  // Step : Gets link from CSV file
   try {
     await uploadFile(req, response);
     fileName = req.file;
@@ -236,7 +240,12 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
       message: `Could not upload the file. ${err}`,
     });
   }
-
+  const httpAgent = new http.Agent({ keepalive: true });
+  const httpsAgent = new https.Agent({ keepAlive: true });
+  httpAgent.maxSockets = 5;
+  httpsAgent.maxSockets = 5;
+  const agent = (_parsedURL) =>
+    _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
   // Step : Create an instance of a new crawler
   const crawlerInstance = new Crawler({
     headers: {
@@ -249,12 +258,15 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
       Accept: "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       // The Referer request header provides the previous web page’s address before the request is sent to the web server.
       Referer: "http://www.google.com/",
+      method: "GET",
+      credentials: "include",
+      agent: "http:" ? httpAgent : httpsAgent,
     },
     // jQuery: true,
     // family: 4,
-    retries: 1, // The crawlers internal code will retry
+    retries: 0, // The crawlers internal code will retry -> I don't think it ends up working the 2 time.
     rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
-    maxConnections: 2, // maxConnections is the maximum number of tasks that can be running at the same time
+    maxConnections: 1, // maxConnections is the maximum number of tasks that can be running at the same time
 
     // Will be called for each crawled page
     callback: (error, res, done) => {
@@ -266,11 +278,11 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
         linkText = "Couldnt get text due to website error";
         csvWriteLinks.push({
           urlFrom: res.options.uri,
-          urlTo: 'Couldnt get urlto error',
+          urlTo: "Couldnt get urlto error",
           text: linkText,
-          linkStatus: 'Error',
-          statusText: 'Error',
-          linkFollow: 'Error',
+          linkStatus: "Error",
+          statusText: "Error",
+          linkFollow: "Error",
         });
         // console.error("---    Error    ---", error);
         console.error("Conditonal Error", error.stack);
@@ -370,80 +382,10 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
   });
 });
 
-// const initalMultipeCrawl = async() => {
-//   fetchData(url).then((res) => {
-//     const html = res.data;
-//     const $ = cheerio.load(html);
-//     if (
-//       res.request === null ||
-//       res.$ === null ||
-//       res.$ === undefined ||
-//       res.request === undefined
-//     ) {
-//       console.log(`\u001b[1;31m Protocol undefined ->`, res.options.uri);
-//       // console.log(res, res.options.uri);
-//       csvWriteLinks.push({
-//         urlFrom: res.options.uri,
-//         linkRel: "Error protocol undefined",
-//         linkText: "Error protocol undefined",
-//       });
-//       done();
-//     }
-//     // hostUrl = res.request.req.protocol + "//" + res.request.host;
-//     // rawHostUrl = res.request.host;
-//     // urlProtocol = res.request.req.protocol;
-//     // pathURL = res.request.path;
-//     // crawlingURL = hostUrl + pathURL;
-//     console.log("---    Working...    ---");
-//     // console.log("Crawling URL:", crawlingURL);
-//     if (res.statusCode == 200) {
-//       console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
-//     } else if (res.statusCode == 404 || res.statusCode == 403) {
-//       console.log(
-//         `\u001b[1;31m Status code: ${res.statusCode} ->`,
-//         res.options.uri
-//       );
-//     } else {
-//       console.log(
-//         `\u001b[1;31m Status code: ${res.statusCode} ->`,
-//         res.options.uri
-//       );
-//     }
-//     // console.log("URL Protocol:", urlProtocol);
-//     // console.log("Host URL:", hostUrl);
-//     // console.log("Raw Host:", rawHostUrl);
-//     // console.log("URL Path:", pathURL);
-//     // Looking for href in the HTML
-//     const anchorTag = $("a");
-//     anchorTag.each(async function () {
-//       // For the link
-//       let link = $(this).attr("href");
-//       // To see things link follow, no follow etc...
-//       let linkText = $(this).text();
-//       linkText.trim();
-//       let linkRel = $(this).attr("rel");
-//       // console.log('link', link);
-//       // Checking text to see if there are any line breaks with the anchor text and trims whitespace
-//       if (linkText.toString().startsWith("\n") || inkText.toString().endsWith("\n") || linkText.toString().startsWith("\r") || linkText.toString().endsWith("\r")) {
-//         linkText = linkText.replace(/[\r\n\t]/gm, "");
-//         linkText = linkText.trim();
-//       }
-//       if (link == undefined || link == null) {
-//         // console.log("undefined link removed", link);
-//         return;
-//       }
-//       let urlFrom = res.options.uri;
-//       await backLinkPromise(urlFrom, link, linkRel, linkText);
-//       await sleep(1000);
-//     });
-//     console.log("-------------------------------------------");
-//   });
-// }
-
-// Checks the status of the link
 const statusCheckV2 = async (array, response) => {
   console.log("---    Status Check...    ---");
   console.log("Status check array length", array.length);
+
   // Websockets
   const httpAgent = new http.Agent({ keepalive: true });
   const httpsAgent = new https.Agent({ keepAlive: true });
@@ -579,89 +521,17 @@ const statusCheckV2 = async (array, response) => {
           path: pathURL,
         })
           .then(async (response) => {
-            // If 403 rerun with proxy
-            if (response.status > 399 && response.status < 500) {
-              console.log("Client Error", response.status);
-              console.log("Fetching 2");
-              fetch(newLinkCrawled[forEachCounter].link, {
-                method: "GET",
-                // proxyAgent,
-                proxy: "http://localhost:3001/",
-                // These headers will allow for accurate status code and not get a 403
-                headers: {
-                  "User-Agent":
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
-                },
-                // accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.",
-                // scheme: schemeHeader,
-                keepalive: true,
-                host: rawHostUrl,
-                path: pathURL,
-              })
-                .then(async (response) => {
-                  console.log(
-                    "Maybe 403 link -->",
-                    linkCrawled[forEachCounter].URLFrom,
-                    response.status
-                  );
-                  let dbPromiseObject = {
-                    urlFrom: linkCrawled[forEachCounter].URLFrom,
-                    urlTo: newLinkCrawled[forEachCounter].link,
-                    text: newLinkCrawled[forEachCounter].text,
-                    linkStatus: response.status,
-                    statusText: response.statusText,
-                    linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                  };
-                  dbCounter++;
-                  csvWriteLinks.push(dbPromiseObject);
-                  await dbPromise(dbPromiseObject);
-                })
-                .catch(async (error) => {
-                  console.log("---    Fetch retry failed    ---");
-                  console.log("Error:", error);
-                  let newURLFrom = linkCrawled[forEachCounter].URLFrom;
-                  if (newURLFrom !== undefined) {
-                    console.log("line 634", newURLFrom);
-                    let dbPromiseObject = {
-                      URLFrom: newURLFrom,
-                      urlTo: newLinkCrawled[forEachCounter].link,
-                      text: newLinkCrawled[forEachCounter].text,
-                      linkStatus: "Error on this link",
-                      statusText: "Error on this link",
-                      linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                    };
-                    dbCounter++;
-                    csvWriteLinks.push(dbPromiseObject);
-                    await dbPromise(dbPromiseObject);
-                  } else {
-                    console.log("line 634", newURLFrom);
-                    let dbPromiseObject = {
-                      URLFrom: "Error on URL FROM -> unknown",
-                      urlTo: newLinkCrawled[forEachCounter].link,
-                      text: newLinkCrawled[forEachCounter].text,
-                      linkStatus: "Error on this link",
-                      statusText: "Error on this link",
-                      linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-                    };
-                    dbCounter++;
-                    csvWriteLinks.push(dbPromiseObject);
-                    await dbPromise(dbPromiseObject);
-                  }
-                  console.log("---    Continuing the check    ---");
-                });
-            } else {
-              let dbPromiseObject = {
-                urlFrom: linkCrawled[forEachCounter].URLFrom,
-                urlTo: newLinkCrawled[forEachCounter].link,
-                text: newLinkCrawled[forEachCounter].text,
-                linkStatus: response.status,
-                statusText: response.statusText,
-                linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-              };
-              dbCounter++;
-              csvWriteLinks.push(dbPromiseObject);
-              await dbPromise(dbPromiseObject);
-            }
+            let dbPromiseObject = {
+              urlFrom: linkCrawled[forEachCounter].URLFrom,
+              urlTo: newLinkCrawled[forEachCounter].link,
+              text: newLinkCrawled[forEachCounter].text,
+              linkStatus: response.status,
+              statusText: response.statusText,
+              linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+            };
+            dbCounter++;
+            csvWriteLinks.push(dbPromiseObject);
+            await dbPromise(dbPromiseObject);
           })
           // If theres an error run this code
           .catch(async (error) => {
@@ -789,314 +659,3 @@ module.exports = {
   // upload,
 };
 
-// Old code
-// const linkDB = async (array) => {
-//   console.log("---    Updating/Creating links in the Database    ---");
-//   let index = 0;
-//   console.log(array.length);
-//   // console.log(array);
-//   await array.forEach(async (link) => {
-//     await sleep(1000);
-//     const linkInDB = await DBLINK.findOne({ urlTo: link.urlTo });
-//     if (!linkInDB) {
-//       createLink({
-//         urlFrom: link.urlFrom,
-//         urlTo: link.urlTo,
-//         text: link.text,
-//         linkStatus: link.linkStatus,
-//         statusText: link.statusText,
-//         linkFollow: link.linkFollow,
-//         dateFound: format,
-//         dateLastChecked: format,
-//       });
-//       index += 1;
-//     } else {
-//       await DBLINK.findOneAndUpdate(
-//         { urlTo: link.urlTo },
-//         { $set: { dateLastChecked: format } },
-//         { runValidators: true, new: true }
-//       );
-//       index++;
-//     }
-//     if (array.length - 1 === index) {
-//       console.log("-------------------------------------------");
-//       console.log("Done with the Database");
-//       return;
-//     }
-//   });
-// };
-
-// Step : Checking the repsonse status of the link
-// const statusCheck = async (array) => {
-//   console.log("---    Status Check...    ---");
-//   console.log("Status check array length", array.length);
-//   // Websockets
-//   const httpAgent = new http.Agent({ keepalive: true });
-//   const httpsAgent = new https.Agent({ keepAlive: true });
-//   httpAgent.maxSockets = 5;
-//   httpsAgent.maxSockets = 5;
-//   const schemeHeader = (_parsedURL) => {
-//     _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
-//   };
-//   const agent = (_parsedURL) =>
-//     _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
-//   const proxyAgent = new HttpsProxyAgent(`http://${proxyHost}:${proxyPort}`);
-//   // Callback function
-//   const runningArray = async (array) => {
-//     let forEachCounter = 0;
-//     await array.forEach(async (linkCrawled) => {
-//       // await limiter();
-//       console.log(forEachCounter, "forEachCounter - link ->", linkCrawled.link);
-//       let newLinkCrawled = linkCrawled.link;
-//       if (array.length - 1 == forEachCounter) {
-//         console.log(forEachCounter, "forEachCounter");
-//         console.log(array.length);
-//         console.log("Final array length", linkStatus.length);
-//         linkDB(linkStatus);
-//       }
-//       // How long you want the delay to be, measured in milliseconds.
-//       setTimeout(async () => {
-//         fetch(newLinkCrawled, {
-//           method: "GET",
-//           agent,
-//           credentials: "include",
-//           headers: {
-//             "User-Agent":
-//               // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36:",
-//               // "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-//               // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
-//               "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-//           },
-//           // keepalive: true,
-//           host: rawHostUrl,
-//           path: pathURL,
-//         })
-//           .then((response) => {
-//             // If 403 rerun with proxy
-//             if (response.status > 399 && response.status < 500) {
-//               console.log("Client Error", response.status);
-//               fetch(newLinkCrawled, {
-//                 method: "GET",
-//                 // proxyAgent,
-//                 proxy: "http://localhost:3001/",
-//                 // These headers will allow for accurate status code and not get a 403
-//                 headers: {
-//                   "User-Agent":
-//                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
-//                 },
-//                 // accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.",
-//                 // scheme: schemeHeader,
-//                 keepalive: true,
-//                 host: rawHostUrl,
-//                 path: pathURL,
-//               })
-//                 .then((response) => {
-//                   console.log(linkCrawled.URLFrom, response.status);
-//                   linkStatus.push({
-//                     urlFrom: linkCrawled.URLFrom,
-//                     urlTo: newLinkCrawled,
-//                     text: linkCrawled.text,
-//                     linkStatus: response.status,
-//                     statusText: response.statusText,
-//                     linkFollow: linkCrawled.linkFollow,
-//                   });
-//                   forEachCounter++;
-//                 })
-//                 .catch((error) => {
-//                   console.log("---    Fetch retry failed    ---");
-//                   console.log("Error:", error);
-//                   // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
-//                   linkStatus.push({
-//                     URLFrom: linkCrawled.URLFrom,
-//                     urlTo: newLinkCrawled,
-//                     text: linkCrawled.text,
-//                     linkStatus: "Error on this link",
-//                     statusText: "Error on this link",
-//                     linkFollow: linkCrawled.linkFollow,
-//                   });
-//                   forEachCounter++;
-//                   console.log("---    Continuing the check    ---");
-//                 });
-//             } else {
-//               linkStatus.push({
-//                 urlFrom: linkCrawled.URLFrom,
-//                 urlTo: newLinkCrawled,
-//                 text: linkCrawled.text,
-//                 linkStatus: response.status,
-//                 statusText: response.statusText,
-//                 linkFollow: linkCrawled.linkFollow,
-//               });
-//               // console.log(linkCrawled.urlTo, response.status);
-//               forEachCounter++;
-//             }
-//           })
-//           // If theres an error run this code
-//           .catch((error) => {
-//             console.log("---    Error    ---");
-//             console.error(error);
-//             console.log(newLinkCrawled);
-//             console.log("---    Retrying the fetch    ---");
-//             setTimeout(async () => {
-//               fetch(newLinkCrawled, {
-//                 method: "GET",
-//                 pool: agent,
-//                 // These headers will allow for accurate status code and not get a 403
-//                 headers: {
-//                   "User-Agent":
-//                     "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-//                   // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
-//                 },
-//                 keepalive: true,
-//                 // maxSockets: 15,
-//               })
-//                 .then((response) => {
-//                   console.log("Retry successful");
-//                   console.log(newLinkCrawled);
-//                   console.log(response.status);
-//                   linkStatus.push({
-//                     urlFrom: linkCrawled.URLFrom,
-//                     urlTo: newLinkCrawled,
-//                     text: linkCrawled.text,
-//                     linkStatus: response.status,
-//                     statusText: response.statusText,
-//                     linkFollow: linkCrawled.linkFollow,
-//                   });
-
-//                   forEachCounter++;
-//                   console.log("---    Continuing the check    ---");
-//                 })
-//                 .catch((error) => {
-//                   console.log("---    Fetch retry failed    ---");
-//                   console.log("Error:", error);
-//                   // Removes from the array so when it does the 2 fetch it wont get the same error
-//                   array.splice(
-//                     array.findIndex((error) => error.link === newLinkCrawled),
-//                     1
-//                   );
-//                   // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
-//                   linkStatus.push({
-//                     URLFrom: linkCrawled.URLFrom,
-//                     urlTo: newLinkCrawled,
-//                     text: linkCrawled.text,
-//                     linkStatus: "Error on this link",
-//                     statusText: "Error on this link",
-//                     linkFollow: linkCrawled.linkFollow,
-//                   });
-//                   forEachCounter++;
-//                   console.log("---    Continuing the check    ---");
-//                 });
-//             }, 1000);
-//           });
-//       }, 1000);
-//     });
-//   };
-//   runningArray(array);
-// };
-
-
-// Step : Converts incomplete links to make them have its domain if it doens't already.
-// For Each link that starts with / (Because it needs a doamin to check its status). We are going to pull it from the array, add the domain to it and push it to a new array
-// We are doing various checks to see what we are getting back... We want to make sure we are getting relative or absolute URL's
-// const linkConverter = async (array) => {
-//   console.log("---    Converting Links...    ---");
-//   let forEachCount = 0;
-
-//   await array.forEach((linkCrawled) => {
-//     let newLinkCrawled = linkCrawled.link;
-//     // newLinkCrawled.trim();
-//     // console.log(newLinkCrawled);
-//     if (
-//       array.length - 1 == forEachCount ||
-//       (array.length - 1 == forEachCount &&
-//         crawledLinks.length - 1 == crawledLinksCount)
-//     ) {
-//       console.dir(formattedLinks, { maxArrayLength: 200 });
-//       statusCheckV2(formattedLinks);
-//       return;
-//     }
-//     if (
-//       newLinkCrawled === undefined ||
-//       newLinkCrawled.startsWith("#") ||
-//       !newLinkCrawled ||
-//       newLinkCrawled.trim() == 0
-//     ) {
-//       console.log("link removed", newLinkCrawled);
-//       forEachCount++;
-//     } else if (newLinkCrawled && newLinkCrawled.startsWith("//")) {
-//       let pulledLink = newLinkCrawled;
-//       pulledLink = urlProtocol + pulledLink;
-//       formattedLinks.push({
-//         URLFrom: linkCrawled.URLFrom,
-//         link: pulledLink,
-//         text: linkCrawled.text,
-//         linkFollow: linkCrawled.linkFollow,
-//       });
-//       forEachCount++;
-//       // console.log(pulledLink);
-//     } else if (
-//       newLinkCrawled &&
-//       newLinkCrawled.startsWith("/") &&
-//       !newLinkCrawled.startsWith("/www")
-//     ) {
-//       let pulledLink = newLinkCrawled;
-//       pulledLink = hostUrl + pulledLink;
-//       formattedLinks.push({
-//         URLFrom: linkCrawled.URLFrom,
-//         link: pulledLink,
-//         text: linkCrawled.text,
-//         linkFollow: linkCrawled.linkFollow,
-//       });
-//       forEachCount++;
-//       // console.log(pulledLink);
-//     } else {
-//       formattedLinks.push({
-//         URLFrom: linkCrawled.URLFrom,
-//         link: newLinkCrawled,
-//         text: linkCrawled.text,
-//         linkFollow: linkCrawled.linkFollow,
-//       });
-//       forEachCount++;
-//       // console.log(newLinkCrawled.link);
-//     }
-//   });
-// };
-
-// if(isValidUrl(newLinkCrawled)){
-//   let domain = (newLinkCrawled.toString());
-//   if(domain.hostname){
-//     domain = domain.hostname.replace('www.','');
-//   }
-//   // console.log(domain);
-//   if(domain.toString() ===
-//     "nstlaw.com" ||
-//     "cutterlaw.com" ||
-//     "lanierlawfirm.com" ||
-//     "nursinghomeabuse.com)" ||
-//     "birthinjurycenter.com" ||
-//     "helpingsurvivors.com"||
-//     "samndan.com" ||
-//     "m-n-law.com" ||
-//     'brownandcrouppen.com' ||
-//     "omara.com" ||
-//     "veternsguide.com" ||
-//     "stein.com" ||
-//     "cordiscosaile.com" ||
-//     "advologix.com" ||
-//     "wvpersonalinjury.com"){
-//       formattedLinks.push({
-//         URLFrom: linkCrawled.URLFrom,
-//         link: newLinkCrawled,
-//         text: linkCrawled.text,
-//         linkFollow: linkCrawled.linkFollow,
-//       });
-//       console.log({
-//         URLFrom: linkCrawled.URLFrom,
-//         link: newLinkCrawled,
-//         text: linkCrawled.text,
-//         linkFollow: linkCrawled.linkFollow,
-//       })
-//   } else {
-//     console.log('link removed', newLinkCrawled)
-//     forEachCount++;
-//   }
-// }

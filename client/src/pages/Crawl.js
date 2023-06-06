@@ -36,9 +36,10 @@ function CrawlPage() {
     event.preventDefault();
     dispatch(crawlLink(formData))
       .then((res) => {
-        // console.log(res);
-        // console.log(res.payload.data);
         let newData = res.payload.data;
+        if(newData == 'No links found'){
+          return alert('No links found');
+        }
         downloadCSV(newData);
         // document.body.appendChild(link);
         // document.querySelector("#download-csv").click();
