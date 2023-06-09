@@ -1,3 +1,24 @@
+
+
+const performTask = (items, numToProcess, processItem) => {
+  let pos = 0;
+  // This is run once for every numToProcess items.
+  const iteration = () => {
+      // Calculate last position.
+      let j = Math.min(pos + numToProcess, items.length);
+      // Start at current position and loop to last position.
+      for (let i = pos; i < j; i++) {
+          processItem(items, i);
+      }
+      // Increment current position.
+      pos += numToProcess;
+      // Only continue if there are more items to process.
+      if (pos < items.length)
+          setTimeout(iteration, 10); // Wait 10 ms to let the UI update.
+  }
+  iteration();
+}
+
 link == "helpingsurvivors.org" ||
         link == "https://helpingsurvivors.org" ||
         link == "brownandcrouppen.com" ||

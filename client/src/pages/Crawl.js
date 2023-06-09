@@ -37,49 +37,61 @@ function CrawlPage() {
     dispatch(crawlLink(formData))
       .then(async (res) => {
         let newData = res.payload.data;
-        let clientData = newData[1];
-        let otherData = newData[0];
-        console.log('client links', clientData);
-        console.log('other links', otherData);
-        if(clientData == 'No links found'){
-          return alert('No links found');
+        // let clientData = newData[1];
+        // let otherData = newData[0];
+        // Puts both files together
+        // const allData = clientData.concat(otherData);
+        let clientData = newData;
+        console.log("client links", clientData);
+        // console.log("other links", otherData);
+        if (clientData == "No links found") {
+          return alert("No links found");
         }
         downloadCSV(clientData);
       })
       .catch((error) => console.log(error));
     // setFormState({});
   };
-  function createCSV(array){
+  function createCSV(array) {
     console.log(array);
     // var keys = Object.keys(array[0]); //Collects Table Headers
-    const keys = ['urlFrom', 'urlTo', 'text', 'linkStatus', 'statusText', 'linkFollow'];
+    const keys = [
+      "urlFrom",
+      "urlTo",
+      "text",
+      "linkStatus",
+      "statusText",
+      "linkFollow",
+    ];
     console.log(keys);
-    
-    var result = ''; //CSV Contents
-    result += keys.join(','); //Comma Seperates Headers
-    result += '\n'; //New Row
-    
+
+    var result = ""; //CSV Contents
+    result += keys.join(","); //Comma Seperates Headers
+    result += "\n"; //New Row
+
     // Might need to change this as its an object not an array
-    array.forEach(function(item){ //Goes Through Each Array Object
-      keys.forEach(function(key){//Goes Through Each Object value
-        result += item[key] + ','; //Comma Seperates Each Key Value in a Row
-      })
-      result += '\n';//Creates New Row
-    })
+    array.forEach(function (item) {
+      //Goes Through Each Array Object
+      keys.forEach(function (key) {
+        //Goes Through Each Object value
+        result += item[key] + ","; //Comma Seperates Each Key Value in a Row
+      });
+      result += "\n"; //Creates New Row
+    });
     return result;
   }
 
-  const downloadCSV =(newData) => {
+  const downloadCSV = (newData) => {
     // let payloadData = newData;
     // let header = Object.keys(payloadData[0]).join(",");
     // let values = payloadData.map((o) => Object.values(o).join(",")).join("\n");
     // csv += header + "\n" + values;
     // console.log(csv);
-    csv = 'data:text/csv;charset=utf-8,' + createCSV(newData);
-    excel = encodeURI(csv); //Links to CSV 
+    csv = "data:text/csv;charset=utf-8," + createCSV(newData);
+    excel = encodeURI(csv); //Links to CSV
     link = document.createElement("a");
     link.setAttribute("href", excel); //Links to CSV File
-    link.setAttribute("download", "test.csv"); //Filename that CSV is saved as
+    link.setAttribute("download", "output.csv"); //Filename that CSV is saved as
     // console.log(link);
     link.click();
   };

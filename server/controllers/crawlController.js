@@ -180,8 +180,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
           linkFollow: "N/A",
           linkStatus: "N/A",
           statusText: "N/A",
-          linkFollow: "N/A",
-          // dateFound: currentDate
+          linkFollow: "N/A"
         }),
           resolve;
         // console.log('link removed', link);
@@ -191,6 +190,10 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
     }
   });
 };
+
+// Send data to client side with 10 ms inbetween so its not too much data sent and\
+// you dont get a range error
+
 // ================================================= //
 
 // Inital crawl to get anchor tags with href attr
@@ -415,9 +418,14 @@ const statusCheckV2 = async (array, response) => {
           "array length",
           "- Done -"
         );
-          // Add code to fix dups in nonClientLinks
-        const holdFinalArrays = [nonClientLinks, csvWriteLinks];
-        response.status(200).send(JSON.stringify(holdFinalArrays));
+        const finalNonClientLinks = nonClientLinks.filter(
+          (thing, index, self) =>
+            index ===
+            self.findIndex((t) => t.URLFrom === thing.URLFrom)
+        );
+        // console.log(finalNonClientLinks);
+        const finalArray = csvWriteLinks.concat(finalNonClientLinks);
+        response.status(200).send(JSON.stringify(finalArray));
       }
 
       if (array.length !== forEachCounter) {
