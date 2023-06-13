@@ -63,7 +63,7 @@ function CrawlPage() {
       "statusText",
       "linkFollow",
     ];
-    console.log(keys);
+    // console.log(keys);
 
     var result = ""; //CSV Contents
     result += keys.join(","); //Comma Seperates Headers

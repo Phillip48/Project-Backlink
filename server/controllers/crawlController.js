@@ -269,7 +269,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
     // jQuery: true,
     // family: 4,
     retries: 0, // The crawlers internal code will retry -> I don't think it ends up working the 2 time.
-    rateLimit: 2000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
+    rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
     maxConnections: 1, // maxConnections is the maximum number of tasks that can be running at the same time
 
     // Will be called for each crawled page
@@ -290,7 +290,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
         console.error("Conditonal Error", error.stack);
         console.log("Continuing");
         if (csvLinks.length == initalCrawlCount) {
-          if (crawledLinks.length == 0) {
+          if (crawledLinks.length === 0) {
             console.log("No links found");
             response.status(200).json("No links");
             return;
@@ -418,14 +418,14 @@ const statusCheckV2 = async (array, response) => {
           "array length",
           "- Done -"
         );
+        response.status(200).send(JSON.stringify(csvWriteLinks));
         const finalNonClientLinks = nonClientLinks.filter(
           (thing, index, self) =>
             index ===
             self.findIndex((t) => t.URLFrom === thing.URLFrom)
         );
         // console.log(finalNonClientLinks);
-        const finalArray = csvWriteLinks.concat(finalNonClientLinks);
-        response.status(200).send(JSON.stringify(finalArray));
+        // const finalArray = csvWriteLinks.concat(finalNonClientLinks);
       }
 
       if (array.length !== forEachCounter) {
