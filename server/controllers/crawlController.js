@@ -281,7 +281,8 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
         linkText = "Couldnt get text due to website error";
         csvWriteLinks.push({
           urlFrom: res.options.uri,
-          urlTo: "Couldnt get urlto error",
+          // urlTo: `Error: ${error.stack}`,
+          urlTo: `Error:`,
           text: linkText,
           linkStatus: "Error",
           statusText: "Error",
@@ -580,14 +581,14 @@ const statusCheckV2 = async (array, response) => {
                   "link ->",
                   newLinkCrawled[forEachCounter].link
                 );
-                // Removes from the array so when it does the 2 fetch it wont get the same error
-                array.splice(
-                  array.findIndex(
-                    (error) =>
-                      error.link === newLinkCrawled[forEachCounter].link
-                  ),
-                  1
-                );
+                // // Removes from the array so when it does the 2 fetch it wont get the same error
+                // array.splice(
+                //   array.findIndex(
+                //     (error) =>
+                //       error.link === newLinkCrawled[forEachCounter].link
+                //   ),
+                //   1
+                // );
                 // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
                 // linkStatus.push({
                 //   URLFrom: newLinkCrawled[forEachCounter].URLFrom,

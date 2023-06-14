@@ -56,12 +56,12 @@ function CrawlPage() {
     console.log(array);
     // var keys = Object.keys(array[0]); //Collects Table Headers
     const keys = [
-      "urlFrom",
-      "urlTo",
-      "text",
+      "linkFollow",
       "linkStatus",
       "statusText",
-      "linkFollow",
+      "text",
+      "urlFrom",
+      "urlTo",
     ];
     // console.log(keys);
 
