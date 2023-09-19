@@ -69,16 +69,17 @@ const isValidUrl = (urlString) => {
 // JS Promise to database upload create -> Might not really need since we are making a CSV file with the links
 const dbPromise = (linkCrawled) => {
   return new Promise(async (resolve) => {
-    const linkInDB = await DBLINK.findOne({
-      urlTo: linkCrawled.urlTo,
-      urlFrom: linkCrawled.urlFrom,
-    });
+    await sleep(1000);
     console.log(
       "URL TO ->",
       linkCrawled.urlTo,
       "URL FROM ->",
       linkCrawled.urlFrom
     );
+    const linkInDB = await DBLINK.findOne({
+      urlTo: linkCrawled.urlTo,
+      urlFrom: linkCrawled.urlFrom,
+    });
     if (!linkInDB) {
       createLink(linkCrawled), resolve;
       // console.log("Creating Link"), resolve;
@@ -153,6 +154,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
         link.includes("https://m-n-law.com")
       ) {
         console.log(link);
+        console.log(urlFrom);
         if (linkRel == "follow" || linkRel == "nofollow") {
           anchorObj = {
             URLFrom: urlFrom,
@@ -180,7 +182,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
           linkFollow: "N/A",
           linkStatus: "N/A",
           statusText: "N/A",
-          linkFollow: "N/A"
+          linkFollow: "N/A",
         }),
           resolve;
         // console.log('link removed', link);
@@ -269,7 +271,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
     // jQuery: true,
     // family: 4,
     retries: 0, // The crawlers internal code will retry -> I don't think it ends up working the 2 time.
-    rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
+    rateLimit: 2000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
     maxConnections: 1, // maxConnections is the maximum number of tasks that can be running at the same time
 
     // Will be called for each crawled page
@@ -319,7 +321,6 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           });
           done();
         }
-        console.log("---    Working...    ---");
         if (res.statusCode == 200) {
           console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
         } else if (res.statusCode == 404 || res.statusCode == 403) {
@@ -346,10 +347,12 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
             let linkRel = $(this).attr("rel");
             // Checking text to see if there are any line breaks with the anchor text and trims whitespace
             if (
-              linkText.toString().startsWith("\n") ||
-              linkText.toString().endsWith("\n") ||
-              linkText.toString().startsWith("\r") ||
-              linkText.toString().endsWith("\r")
+              // linkText.toString().startsWith("\n") ||
+              // linkText.toString().endsWith("\n") ||
+              linkText.toString().includes("\n") ||
+              linkText.toString().includes("\r")
+              // linkText.toString().startsWith("\r") ||
+              // linkText.toString().endsWith("\r")
             ) {
               linkText = linkText.replace(/[\r\n\t]/gm, "");
               linkText = linkText.trim();
@@ -386,6 +389,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
 const statusCheckV2 = async (array, response) => {
   console.log("---    Status Check...    ---");
   console.log("Status check array length", array.length);
+  // console.log("Array", array);
 
   // Websockets
   const httpAgent = new http.Agent({ keepalive: true });
@@ -419,27 +423,35 @@ const statusCheckV2 = async (array, response) => {
           "array length",
           "- Done -"
         );
+        console.log(csvWriteLinks);
         response.status(200).send(JSON.stringify(csvWriteLinks));
-        const finalNonClientLinks = nonClientLinks.filter(
-          (thing, index, self) =>
-            index ===
-            self.findIndex((t) => t.URLFrom === thing.URLFrom)
-        );
+        // const finalNonClientLinks = nonClientLinks.filter(
+        //   (thing, index, self) =>
+        //     index === self.findIndex((t) => t.URLFrom === thing.URLFrom)
+        // );
         // console.log(finalNonClientLinks);
         // const finalArray = csvWriteLinks.concat(finalNonClientLinks);
       }
-
       if (array.length !== forEachCounter) {
-        console.log(forEachCounter, newLinkCrawled[forEachCounter].link);
+        // if (newLinkCrawled[forEachCounter] === undefined) {
+        //   // Removes from the array so when it does the 2 fetch it wont get the same error
+        //   array.splice(
+        //     array.findIndex(
+        //       (newLinkCrawled) => newLinkCrawled[forEachCounter] === newLinkCrawled[forEachCounter].link
+        //     ),
+        //     1
+        //   );
+        //   console.log("Removed undefined");
+        // }
         // Makes sure url is proper before crawling
         if (newLinkCrawled[forEachCounter].link.startsWith("mailto:")) {
           console.log("mailto not valid", newLinkCrawled[forEachCounter].link);
-          array.splice(
-            array.findIndex(
-              (error) => error.link === newLinkCrawled[forEachCounter].link
-            ),
-            1
-          );
+          // array.split(
+          //   array.findIndex(
+          //     (error) => error.link === newLinkCrawled[forEachCounter].link
+          //   ),
+          //   1
+          // );
         }
         if (isValidUrl(newLinkCrawled[forEachCounter].link) == false) {
           console.log("failed url check", linkCrawled[forEachCounter].URLFrom);
@@ -454,39 +466,8 @@ const statusCheckV2 = async (array, response) => {
           dbCounter++;
           csvWriteLinks.push(dbPromiseObject);
           await dbPromise(dbPromiseObject);
-          // const linkInDB = await DBLINK.findOne({
-          //   urlTo: newLinkCrawled[forEachCounter].link,
-          // });
-          // if (!linkInDB) {
-          //   await createLink({
-          //     urlFrom: linkCrawled[forEachCounter].URLFrom,
-          //     urlTo: newLinkCrawled[forEachCounter].link,
-          //     text: newLinkCrawled[forEachCounter].text,
-          //     linkStatus: 'Not a valid link!!!!',
-          //     statusText: 'Not a valid link!!!!',
-          //     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
-          //   });
-          //   dbCounter++;
-          //   console.log("Creating non valid link", newLinkCrawled[forEachCounter].link);
-          // } else {
-          //   await DBLINK.findOneAndUpdate(
-          //     { urlTo: newLinkCrawled[forEachCounter].urlTo },
-          //     { $set: { dateLastChecked: format } },
-          //     { runValidators: true, new: true }
-          //   );
-          //   dbCounter++;
-          //   console.log("Updating non valid link", newLinkCrawled[forEachCounter].link);
-          //   // Removes from the array so when it does the 2 fetch it wont get the same error
-          //   array.splice(
-          //     array.findIndex(
-          //       (error) =>
-          //         error.link === newLinkCrawled[forEachCounter].link
-          //     ),
-          //     1
-          //   );
-          // }
         }
-        // console.log(forEachCounter, "forEachCounter");
+        console.log(forEachCounter, "forEachCounter");
         fetch(newLinkCrawled[forEachCounter].link, {
           method: "GET",
           agent,
@@ -511,6 +492,7 @@ const statusCheckV2 = async (array, response) => {
               statusText: response.statusText,
               linkFollow: newLinkCrawled[forEachCounter].linkFollow,
             };
+            // console.log(dbPromiseObject);
             dbCounter++;
             csvWriteLinks.push(dbPromiseObject);
             await dbPromise(dbPromiseObject);
@@ -545,6 +527,8 @@ const statusCheckV2 = async (array, response) => {
                   statusText: response.statusText,
                   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                 };
+                // console.log(dbPromiseObject);
+
                 dbCounter++;
                 csvWriteLinks.push(dbPromiseObject);
                 await dbPromise(dbPromiseObject);
@@ -581,14 +565,6 @@ const statusCheckV2 = async (array, response) => {
                   "link ->",
                   newLinkCrawled[forEachCounter].link
                 );
-                // // Removes from the array so when it does the 2 fetch it wont get the same error
-                // array.splice(
-                //   array.findIndex(
-                //     (error) =>
-                //       error.link === newLinkCrawled[forEachCounter].link
-                //   ),
-                //   1
-                // );
                 // Pushing the bad link to the array because it was still pulled from the page and marking it as a bad link
                 // linkStatus.push({
                 //   URLFrom: newLinkCrawled[forEachCounter].URLFrom,
@@ -600,7 +576,7 @@ const statusCheckV2 = async (array, response) => {
                 // });
                 let newURLFrom = linkCrawled[forEachCounter].URLFrom;
                 if (newURLFrom !== undefined) {
-                  console.log("line 634", newURLFrom);
+                  console.log("line 574", newURLFrom);
                   let dbPromiseObject = {
                     URLFrom: newURLFrom,
                     urlTo: newLinkCrawled[forEachCounter].link,
@@ -609,15 +585,17 @@ const statusCheckV2 = async (array, response) => {
                     statusText: "Error on this link",
                     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
                   };
+                  // console.log(dbPromiseObject);
+
                   dbCounter++;
                   csvWriteLinks.push(dbPromiseObject);
                   await dbPromise(dbPromiseObject);
                 } else {
-                  console.log("line 634", newURLFrom);
+                  console.log("line 587", newURLFrom);
                   let dbPromiseObject = {
                     URLFrom: `${
-                      newURLFrom ? newURLFrom : "unknown"
-                    } <- Error on URL FROM `,
+                      newURLFrom === undefined ? "Undefined" : newURLFrom
+                    }`,
                     urlTo: newLinkCrawled[forEachCounter].link,
                     text: newLinkCrawled[forEachCounter].text,
                     linkStatus: "Error on this link",
@@ -632,7 +610,7 @@ const statusCheckV2 = async (array, response) => {
               });
           });
       }
-      continue;
+      // continue;
     }
   };
   runningArrayV2(array);

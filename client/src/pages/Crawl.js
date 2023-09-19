@@ -48,24 +48,25 @@ function CrawlPage() {
           return alert("No links found");
         }
         downloadCSV(clientData);
+        setFormState({});
       })
       .catch((error) => console.log(error));
     // setFormState({});
   };
   function createCSV(array) {
     console.log(array);
-    // var keys = Object.keys(array[0]); //Collects Table Headers
+    // let keys = Object.keys(array[0]); //Collects Table Headers
     const keys = [
-      "linkFollow",
-      "linkStatus",
-      "statusText",
-      "text",
       "urlFrom",
       "urlTo",
+      "text",
+      "linkStatus",
+      "statusText",
+      "linkFollow",
     ];
-    // console.log(keys);
+    console.log(keys);
 
-    var result = ""; //CSV Contents
+    let result = ""; //CSV Contents
     result += keys.join(","); //Comma Seperates Headers
     result += "\n"; //New Row
 
@@ -92,7 +93,6 @@ function CrawlPage() {
     link = document.createElement("a");
     link.setAttribute("href", excel); //Links to CSV File
     link.setAttribute("download", "output.csv"); //Filename that CSV is saved as
-    // console.log(link);
     link.click();
   };
 
