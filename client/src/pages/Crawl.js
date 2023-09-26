@@ -53,10 +53,40 @@ function CrawlPage() {
       .catch((error) => console.log(error));
     // setFormState({});
   };
+  // function createCSV(array) {
+  //   console.log(array);
+  //   // let keys = Object.keys(array[0]); //Collects Table Headers
+  //   const keys = [
+  //     "urlFrom",
+  //     "urlTo",
+  //     "text",
+  //     "linkStatus",
+  //     "statusText",
+  //     "linkFollow",
+  //   ];
+  //   console.log(keys);
+
+  //   let result = ""; //CSV Contents
+  //   result += keys.join(","); //Comma Seperates Headers
+  //   result += "\n"; //New Row
+
+  //   // Might need to change this as its an object not an array
+  //   array.forEach(function (item) {
+  //     //Goes Through Each Array Object
+  //     keys.forEach(function (key) {
+  //       //Goes Through Each Object value
+  //       result += item[key] + ","; //Comma Seperates Each Key Value in a Row
+  //     });
+  //     result += "\n"; //Creates New Row
+  //   });
+  //   return result;
+  // }
   function createCSV(array) {
     console.log(array);
+    const csvRows = [];
+    // const headers = Object.keys(data[0]);
     // let keys = Object.keys(array[0]); //Collects Table Headers
-    const keys = [
+    const headers = [
       "urlFrom",
       "urlTo",
       "text",
@@ -64,22 +94,26 @@ function CrawlPage() {
       "statusText",
       "linkFollow",
     ];
-    console.log(keys);
 
-    let result = ""; //CSV Contents
-    result += keys.join(","); //Comma Seperates Headers
-    result += "\n"; //New Row
+    /* Using push() method we push fetched
+           data into csvRows[] array */
+    csvRows.push(headers.join(","));
 
-    // Might need to change this as its an object not an array
-    array.forEach(function (item) {
-      //Goes Through Each Array Object
-      keys.forEach(function (key) {
-        //Goes Through Each Object value
-        result += item[key] + ","; //Comma Seperates Each Key Value in a Row
+    // Loop to get value of each objects key
+    for (const row of array) {
+      const values = headers.map((header) => {
+        const val = row[header];
+        return `"${val}"`;
       });
-      result += "\n"; //Creates New Row
-    });
-    return result;
+
+      // To add, separator between each value
+      csvRows.push(values.join(","));
+    }
+
+    /* To add new line for each objects values
+           and this return statement array csvRows
+           to this function.*/
+    return csvRows.join("\n");
   }
 
   const downloadCSV = (newData) => {

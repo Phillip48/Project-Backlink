@@ -234,7 +234,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           console.log("Links from reader:", csvLinks);
           console.log("CSV scan finished");
           setTimeout(async function () {
-            await sleep(3000);
+            await sleep(4000);
             // proxyGenerator();
             crawlerInstance.queue(csvLinks);
           }, 1000);
@@ -290,7 +290,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           statusText: "Error",
           linkFollow: "Error",
         });
-        console.error("Conditonal Error", error.stack);
+        console.log("\u001b[1;31m Conditonal Error", error.stack);
         console.log("Continuing");
         if (csvLinks.length == initalCrawlCount) {
           if (crawledLinks.length === 0) {
