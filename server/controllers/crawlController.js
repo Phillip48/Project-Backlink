@@ -410,7 +410,7 @@ const statusCheckV2 = async (array, response) => {
       forEachCounter <= array.length;
       forEachCounter++
     ) {
-      await sleep(4000);
+      await sleep(5000);
       let linkCrawled = array;
       let newLinkCrawled = array;
       if (array.length === forEachCounter) {

@@ -121,7 +121,7 @@ function CrawlPage() {
     // let header = Object.keys(payloadData[0]).join(",");
     // let values = payloadData.map((o) => Object.values(o).join(",")).join("\n");
     // csv += header + "\n" + values;
-    // console.log(csv);
+    console.log(newData);
     csv = "data:text/csv;charset=utf-8," + createCSV(newData);
     excel = encodeURI(csv); //Links to CSV
     link = document.createElement("a");
