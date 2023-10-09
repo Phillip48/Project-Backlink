@@ -2,6 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
+import exampleImage from '../assets/Screenshot 2023-10-09 at 2.43.36 PM.png';
 import {
   createLink,
   crawlLink,
@@ -150,8 +151,14 @@ function CrawlPage() {
     <section className="crawl-page-wrapper">
       <h3>
         Insert CSV file to crawl. The websites need to be using the
-        protocol/scheme, sub-domain, domain and the top level domain
+        protocol/scheme, sub-domain, domain and the top level domain.
+        The crawler wont crawl the first row in the file.
+        Example of what the file needs to look like:
       </h3>
+      <img
+        src={exampleImage}
+        alt="Example of csv"
+      />
 
       <div className="topnav">
         <div className="search-container">
