@@ -113,11 +113,7 @@ const statusCheckFromDB = async (array) => {
 
                   index++;
                   if (array.length - 1 === index) {
-                    const endTime = performance.now();
                     console.dir(linkStatus, { maxArrayLength: maxArrayLength });
-                    console.log(
-                      `Status check took ${endTime - startTime} milliseconds.`
-                    );
                     console.log("Final array length", linkStatus.length);
                     linkDB(linkStatus);
                   }
@@ -150,10 +146,6 @@ const statusCheckFromDB = async (array) => {
               //   console.dir("Final Array", linkStatus, {
               //     maxArrayLength: maxArrayLength,
               //   });
-              const endTime = performance.now();
-              console.log(
-                `Status check took ${endTime - startTime} milliseconds.`
-              );
               console.log("Final array length", linkStatus.length);
               linkDB(linkStatus);
               // writeToJSON(linkStatus);

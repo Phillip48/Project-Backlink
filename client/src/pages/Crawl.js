@@ -178,7 +178,7 @@ function CrawlPage() {
           </form>
         </div>
       </div>
-      <div className="crawl_link_links">
+      {/* <div className="crawl_link_links">
         <a href="/gscLinks">Upload a GSC CSV File</a>
       </div>
       <div className="crawl_link_links">
@@ -186,7 +186,7 @@ function CrawlPage() {
       </div>
       <div className="crawl_link_links">
         <button onClick={handleFormSubmitRecheck}>Recheck DB Links</button>
-      </div>
+      </div> */}
 
       {/* <div className="crawl_link_links">
         <button
