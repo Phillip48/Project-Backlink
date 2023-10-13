@@ -92,6 +92,10 @@
   margin-bottom: -.1rem;
   font-size: 1rem;
 }
+#downloadButton{
+  display:none;
+  margin-top: 10px;
+}
 
 /* 
 @keyframes App-logo-spin {

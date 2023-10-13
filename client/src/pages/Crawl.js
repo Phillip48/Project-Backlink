@@ -22,7 +22,6 @@ function CrawlPage() {
   const [inputFile, setInputFile] = useState("");
   const [inputFileName, setInputFileName] = useState("");
   const [formState, setFormState] = useState("");
-  // const { csvFile } = formState;
 
   const handleChange = (event) => {
     setInputFile(event.target.files[0]);
@@ -96,8 +95,7 @@ function CrawlPage() {
       "linkFollow",
     ];
 
-    /* Using push() method we push fetched
-           data into csvRows[] array */
+    /* Using push() method we push fetched data into csvRows[] array */
     csvRows.push(headers.join(","));
 
     // Loop to get value of each objects key
@@ -111,13 +109,13 @@ function CrawlPage() {
       csvRows.push(values.join(","));
     }
 
-    /* To add new line for each objects values
-           and this return statement array csvRows
-           to this function.*/
+    /* To add new line for each objects values and this return statement array csvRows
+    to this function.*/
     return csvRows.join("\n");
   }
 
   const downloadCSV = (newData) => {
+    // const buttonID = document.getElementById('downloadButton'); // Target button by id
     // let payloadData = newData;
     // let header = Object.keys(payloadData[0]).join(",");
     // let values = payloadData.map((o) => Object.values(o).join(",")).join("\n");
@@ -128,13 +126,16 @@ function CrawlPage() {
     link = document.createElement("a");
     link.setAttribute("href", excel); //Links to CSV File
     link.setAttribute("download", "output.csv"); //Filename that CSV is saved as
+    // buttonID.style.display = "block"; // Display Button
+    // buttonID.setAttribute("download", "output.csv"); // Add functionality to download the csv from the button
     link.click();
+    // console.log("formstate", formState);
   };
 
-  const handleFormSubmitRecheck = async (event) => {
-    event.preventDefault();
-    dispatch(recheckLinks());
-  };
+  // const handleFormSubmitRecheck = async (event) => {
+  //   event.preventDefault();
+  //   dispatch(recheckLinks());
+  // };
 
   useEffect(() => {
     // Check if theres an error from redux
@@ -182,6 +183,9 @@ function CrawlPage() {
             <button type="submit" onClick={handleFormSubmit}>
               Submit
             </button>
+            {/* <button id="downloadButton" type="download">
+              Download
+            </button> */}
           </form>
         </div>
       </div>
