@@ -1,10 +1,11 @@
 # Project-Backlink
 # The Project
 This is a full stack MERN project. The purpose is to crawl an array of thousands of Url's, pull the links from the page and find specific links on that page.
+More info can be found in the Wiki like things i need to get done and things i need to improve.
 
 ## Installation
 
-You can access the deployed application with the Heroku link: (Not uplodaded yet)
+You can access the deployed application with the following link: (Not uplodaded yet)
 
 To install the project follow these steps:
 
@@ -17,7 +18,10 @@ To install the project follow these steps:
    - npm install
 
 3. Run the app with:
-   - npm run dev
+   - npm run dev or npm run start
+
+4. Once started:
+   - You can upload your CSV file and the crawler will work and download what it came back with in another CSV file. The crawler will not read the first line of the CSV file when you upload so please keep that in mind. 
 
 ## Questions  
 
