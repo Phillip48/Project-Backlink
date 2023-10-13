@@ -145,7 +145,8 @@ function CrawlPage() {
   }, [isError, message]);
 
   if (isLoading) {
-    return <Spinner />;
+    alert('Crawler working. When finished CSV will download');
+    // return <Spinner />;
   }
 
   return (
