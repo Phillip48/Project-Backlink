@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
-import exampleImage from '../assets/Screenshot 2023-10-09 at 2.43.36 PM.png';
+import exampleImage from "../assets/Screenshot 2023-10-09 at 2.43.36 PM.png";
 import {
   createLink,
   crawlLink,
@@ -13,6 +13,14 @@ import {
 let csv = "";
 let link;
 let excel;
+
+const socket = new WebSocket('ws://localhost:3001');
+socket.addEventListener('open', () =>{
+  socket.send('Client Connected');
+});
+socket.addEventListener('message', (event) =>{
+  console.log('Message from server:', event.data);
+});
 
 function CrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
@@ -31,6 +39,7 @@ function CrawlPage() {
 
   // submit form
   const handleFormSubmit = async (event) => {
+    // socket.send('hello');
     let formData = new FormData();
     formData.append("csvFile", inputFile);
     event.preventDefault();
@@ -145,7 +154,7 @@ function CrawlPage() {
   }, [isError, message]);
 
   if (isLoading) {
-    alert('Crawler working. When finished CSV will download');
+    alert("Crawler working. When finished CSV will download");
     // return <Spinner />;
   }
 
@@ -153,14 +162,11 @@ function CrawlPage() {
     <section className="crawl-page-wrapper">
       <h3>
         Insert CSV file to crawl. The websites need to be using the
-        protocol/scheme, sub-domain, domain and the top level domain.
-        The crawler wont crawl the first row in the file.
-        Example of what the file needs to look like:
+        protocol/scheme, sub-domain, domain and the top level domain. The
+        crawler wont crawl the first row in the file. Example of what the file
+        needs to look like:
       </h3>
-      <img
-        src={exampleImage}
-        alt="Example of csv"
-      />
+      <img src={exampleImage} alt="Example of csv" />
 
       <div className="topnav">
         <div className="search-container">

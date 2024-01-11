@@ -96,7 +96,6 @@ const dbPromise = (linkCrawled) => {
     }
   });
 };
-
 // JS Promise to se if the link is one of our internal sites or client sites
 const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
   return new Promise(async (resolve) => {
@@ -321,6 +320,16 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           });
           done();
         }
+        // ========================================================= //
+        numberOn = csvCount;
+        numberTo = csvLinks.length;
+        let progressUpdater = `${numberOn} / ${numberTo}`;
+        console.log('CC',progressUpdater);
+        // const wss = require("../server");
+        // wss.on("connection", function connection(ws) {
+        //   ws.send("crawler connected");
+        // });
+        // ========================================================= //
         if (res.statusCode == 200) {
           console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
         } else if (res.statusCode == 404 || res.statusCode == 403) {
