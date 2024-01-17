@@ -320,15 +320,14 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           });
           done();
         }
-        // ========================================================= //
+        // =========================================================1 //
         numberOn = csvCount;
         numberTo = csvLinks.length;
-        let progressUpdater = `${numberOn} / ${numberTo}`;
+        let progressUpdater
+        progressUpdater = `${numberOn} / ${numberTo}`;
         console.log('CC',progressUpdater);
-        // const wss = require("../server");
-        // wss.on("connection", function connection(ws) {
-        //   ws.send("crawler connected");
-        // });
+        const socketEventUpdate = require('../middleware/socketsMiddleware');
+        socketEventUpdate(progressUpdater);
         // ========================================================= //
         if (res.statusCode == 200) {
           console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
@@ -420,6 +419,16 @@ const statusCheckV2 = async (array, response) => {
       forEachCounter++
     ) {
       await sleep(5000);
+      // =========================================================1 //
+      numberOn = forEachCounter;
+      numberTo = array.length;
+      let progressUpdater
+      module.exports = progressUpdater = `${numberOn} / ${numberTo}`;
+      console.log('CC',progressUpdater);
+      // const wss = require("../server");
+      // wss.send("Sending progress data", progressUpdater);;
+      // console.log('wss', wss);
+      // ========================================================= //
       let linkCrawled = array;
       let newLinkCrawled = array;
       if (array.length === forEachCounter) {

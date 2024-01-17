@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
 import exampleImage from "../assets/Screenshot 2023-10-09 at 2.43.36 PM.png";
+import io from "socket.io-client";
 import {
   createLink,
   crawlLink,
@@ -14,24 +15,27 @@ let csv = "";
 let link;
 let excel;
 
-const socket = new WebSocket('ws://localhost:3001');
-socket.addEventListener('open', () =>{
-  socket.send('Client Connected');
-});
-socket.addEventListener('message', (event) =>{
-  console.log('Message from server:', event.data);
-});
+// WSS code
+// const socket = new WebSocket("ws://localhost:3001");
+// // socket.addEventListener('open', () =>{
+// //   socket.send('Client Connected');
+// // });
+// socket.addEventListener("message", (event) => {
+//   console.log("Message from server:", event.data);
+//   // alert('Message from server:', event.data);
+const socket = io("http://localhost:3001");
 
 function CrawlPage() {
   const { isLoading, isError, message } = useSelector((state) => state.links);
-
   const dispatch = useDispatch();
-
   const [inputFile, setInputFile] = useState("");
   const [inputFileName, setInputFileName] = useState("");
   const [formState, setFormState] = useState("");
+  const [socketState, setSocketState] = useState("");
 
   const handleChange = (event) => {
+    // Emit worked ->
+    // socket.emit('message', 'handleChange');
     setInputFile(event.target.files[0]);
     setInputFileName(event.target.files[0].name);
     setFormState({ ...formState, [event.target.name]: event.target.value });
@@ -39,7 +43,6 @@ function CrawlPage() {
 
   // submit form
   const handleFormSubmit = async (event) => {
-    // socket.send('hello');
     let formData = new FormData();
     formData.append("csvFile", inputFile);
     event.preventDefault();
@@ -147,15 +150,33 @@ function CrawlPage() {
   // };
 
   useEffect(() => {
+    socket.emit("message", "Client connected");
     // Check if theres an error from redux
     if (isError) {
       console.log(message);
     }
-  }, [isError, message]);
+    socket.on('connection', (msg) => {
+      socket.emit("message", "Client connected");
+      console.log('Message', msg);
+    });
+    socket.on('message', (msg) => {
+      socket.emit("message", "Message received");
+      console.log('Message', msg);
+    });
+    socket.on('send message', (msg) => {
+      socket.emit("message", "Message received");
+      console.log('Message', msg);
+    });
+  }, [isError, message, socket]);
 
   if (isLoading) {
-    alert("Crawler working. When finished CSV will download");
+    // alert("Crawler working. When finished CSV will download");
     // return <Spinner />;
+    // console.log('Loading');
+    // socket.on('message', (msg) => {
+    //   socket.emit("message", "Message received");
+    //   console.log('Message', msg);
+    // })
   }
 
   return (
@@ -187,7 +208,7 @@ function CrawlPage() {
               webkitdirectory
               multiple
             />
-            <button type="submit" onClick={handleFormSubmit}>
+            <button id="myButton" type="submit" onClick={handleFormSubmit}>
               Submit
             </button>
             {/* <button id="downloadButton" type="download">
