@@ -7,9 +7,13 @@ const clientSchema = new Schema(
             type: String,
             required: true,
         },
+        clientWebsite: {
+            type: String,
+            required: true,
+        },
         clientLink: {
             type: Schema.Types.ObjectId,
-            required: true,
+            // required: true,
             ref: 'Link',
         },
     },

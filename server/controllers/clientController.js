@@ -24,11 +24,14 @@ const getSingleClient = asyncHandler(async (req, res) => {
 });
 // create a new client
 const createClient = asyncHandler(async (req, res) => {
+  console.log(req.body.clientName, req.body.clientWebsite);
+//   console.log(req);
   const client = await Client.create({
-    clientName: req.clientName,
+    clientName: req.body.clientName,
+    clientWebsite: req.body.clientWebsite,
   });
   if (res) {
-    res.status(200).json("Finished creating client(s)");
+    res.status(200).json(client);
   } else {
     // console.log("Finished creating clients");
   }
@@ -47,7 +50,9 @@ const updateClient = asyncHandler(async (req, res) => {
         : res.json("Done updating")
     )
     .catch((err) =>
-      !res ? console.log("Finished upadating clients") : res.status(500).json(err)
+      !res
+        ? console.log("Finished upadating clients")
+        : res.status(500).json(err)
     );
   // console.log(client);
   if (res) {
@@ -89,5 +94,5 @@ module.exports = {
   updateClient,
   updateClientbyURL,
   deleteClient,
-  createClient
+  createClient,
 };

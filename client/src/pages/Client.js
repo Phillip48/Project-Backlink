@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
-import { Label, Input, Row, Col, FormGroup } from 'reactstrap';
+import { Label, Input, Row, Col, FormGroup } from "reactstrap";
 import Spinner from "../components/Spinner";
 import {
   getClient,
@@ -20,8 +20,9 @@ const ClientPage = () => {
   const [formState, setFormState] = useState("");
   const [clientState, setClientState] = useState({
     clientName: "",
+    clientWebsite: "",
   });
-  const { clientName } = clientState;
+  const { clientName, clientWebsite } = clientState;
 
   const clientStatCounter = () => {
     if (client) {
@@ -35,19 +36,22 @@ const ClientPage = () => {
   };
 
   const handleChange = (event) => {
-    const { value } = event.target;
+    const { name, value } = event.target;
 
-    setClientState(value);
-    console.log(clientState);
+    setClientState({
+      ...clientState,
+      [name]: value,
+    });
   };
 
   // submit form
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-    console.log(clientState);
     const clientData = {
-      clientName,
+      clientName: clientState.clientName,
+      clientWebsite: clientState.clientWebsite,
     };
+    console.log("Before dispatch", clientData);
     dispatch(createClient(clientData));
   };
 
@@ -56,7 +60,6 @@ const ClientPage = () => {
     if (isError) {
       console.log(message);
     }
-    // dispatch(getClient());
 
     return () => {
       dispatch(reset());
@@ -78,26 +81,36 @@ const ClientPage = () => {
           <Col md={12} className="user-grades-inputs-col">
             <FormGroup>
               <Label className="" for="clientName">
-                Date:
+                Client Name:
               </Label>
               <Input
-                id="client"
+                id="clientName"
                 name="clientName"
-                placeholder={"hi"}
+                placeholder={"Law Firm"}
                 type="text"
                 required
                 value={clientState.clientName}
                 onChange={handleChange}
               />
             </FormGroup>
+            <FormGroup>
+              <Label className="" for="clientWebsite">
+                Client Website Url:
+              </Label>
+              <Input
+                id="clientURL"
+                name="clientWebsite"
+                placeholder={"https://lawfirm.com/"}
+                type="text"
+                required
+                value={clientState.clientWebsite}
+                onChange={handleChange}
+              />
+            </FormGroup>
           </Col>
         </form>
         <div className="form-center-button">
-          <button
-            type="submit"
-            className=""
-            onClick={handleFormSubmit}
-          >
+          <button type="submit" className="" onClick={handleFormSubmit}>
             Create Client
           </button>
         </div>

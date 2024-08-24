@@ -8,11 +8,11 @@ const {
     deleteClient
 } = require('../../controllers/clientController');
 
-// /api/get-link
+// /api/get-client
 
-// Link Routes
+// Client Routes
 router.route('/client').get(getClients);
-router.route('/client').post(createClient);
+router.route('/client-create').post(createClient);
 router.route('/clients/:id').get(getSingleClient).delete(deleteClient).put(updateClient);
 
 module.exports = router;

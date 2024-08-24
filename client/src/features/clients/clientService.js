@@ -17,20 +17,36 @@ const API_URL = "/api/get-client/";
 
 const getClient = async () => {
   const response = await axios.get(API_URL + "client");
-  
+
   return response.data;
 };
 
 const createClient = async (clientData) => {
-    const response = await axios.post(API_URL + "client", clientData);
-    
-    return response.data;
+  console.log("clientservice", clientData);
+  const headers = {
+    "Content-Type": "multipart/form-data",
+  };
+  const response = await axios
+    .post("/api/get-client/client-create", clientData, headers)
+    .then((res) => {
+      console.log(res);
+      return res;
+    });
+  return response;
+  // console.log('clientservice', req);
+  // const clientData = {
+  //     clientName : req.clientName,
+  //     clientWebsite : req.clientWebsite,
+  // };
+  // const response = await axios.post(API_URL + "client-create", clientData);
+
+  // return response.data;
 };
 
 const clientService = {
-//   crawlSite,
+  //   crawlSite,
   getClient,
-  createClient
+  createClient,
 };
 
 export default clientService;
