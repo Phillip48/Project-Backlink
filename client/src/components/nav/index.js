@@ -4,11 +4,12 @@ function Nav() {
     return(
         <header className="main-header">
             <div className="header-home-page">
-                <a className="header-nav-a-tag" href="/">Home</a>
+                <a className="header-nav-a-tag" href="/links">Home</a>
             </div>
 
             <div className="header-links">
-                <a className="header-nav-a-tag" href="/">Crawled Links</a>
+                {/* <a className="header-nav-a-tag" href="/links">Crawled Links</a> */}
+                <a className="header-nav-a-tag" href="/crawl">Crawl</a>
             </div>
         </header>
     );

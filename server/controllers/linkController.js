@@ -2,13 +2,13 @@ const { ObjectId } = require("mongoose").Types;
 const { Link } = require("../models");
 const asyncHandler = require("express-async-handler");
 
-// Get all projects
+// Get all links
 const getLinks = asyncHandler(async (req, res) => {
   const link = await Link.find({ link: req.link });
   res.status(200).json(link);
 });
 
-// Get a single projects
+// Get a single link
 const getSingleLink = asyncHandler(async (req, res) => {
   const link = await Link.findById(req.params.id);
 
@@ -22,8 +22,26 @@ const getSingleLink = asyncHandler(async (req, res) => {
     .catch((err) => res.status(500).json(err));
   res.status(200).json(link);
 });
-// create a new projects
+
+// Get a single link by client
+const getLinkByClientName = asyncHandler(async (req, res) => {
+  Link.find({ clientName: req.body.clientName })
+    .select("-__v")
+    .then((link) =>
+      !link
+        ? res.status(404).json({ message: "No link with that date" })
+        : res.json(link)
+    )
+    .catch((err) => res.status(500).json(err));
+});
+
+// create a new link
 const createLink = asyncHandler(async (req, res) => {
+  // Check for clientName
+  // if (!req.clientName) {
+  //   res.status(401);
+  //   throw new Error("Client not found");
+  // }
   const link = await Link.create({
     urlFrom: req.urlFrom,
     urlTo: req.urlTo,
@@ -33,6 +51,7 @@ const createLink = asyncHandler(async (req, res) => {
     linkFollow: req.linkFollow,
     dateFound: req.dateFound,
     dateLastChecked: req.dateLastChecked,
+    clientName: req.clientName.id,
   });
   if (res) {
     res.status(200).json("Finished creating links");
@@ -41,7 +60,7 @@ const createLink = asyncHandler(async (req, res) => {
   }
 });
 
-// update a projects
+// update a link
 const updateLink = asyncHandler(async (req, res) => {
   const link = await Link.findOneAndUpdate(
     req.body,
@@ -93,7 +112,8 @@ const deleteLink = asyncHandler(async (req, res) => {
 module.exports = {
   getLinks,
   getSingleLink,
+  getLinkByClientName,
   updateLink,
   deleteLink,
-  createLink
+  createLink,
 };

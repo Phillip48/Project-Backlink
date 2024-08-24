@@ -67,7 +67,7 @@ const LinkPage = () => {
 
   const linkStatCounter = () => {
     if (links) {
-      links.forEach((links) => {
+      links.forEach((link) => {
         linksCount++;
       });
       return linksCount;

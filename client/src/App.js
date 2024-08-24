@@ -18,7 +18,7 @@ function App() {
         <main>
           {/* Routing to render different pages when needed */}
           <Routes>
-            <Route path="/" element={<CrawlPage />} />
+            <Route path="/crawl" element={<CrawlPage />} />
             <Route path="/Links" element={<LinksPage />} />
             <Route path="/gscLinks" element={<GscCrawlPage />} />
           </Routes>
