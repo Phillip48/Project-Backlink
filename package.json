@@ -12,6 +12,7 @@
     "json2csv": "^6.0.0-alpha.2",
     "nodemon": "^2.0.20",
     "papaparse": "^5.4.1",
+    "reactstrap": "^9.2.2",
     "socket.io": "^4.7.3",
     "websocket": "^1.0.34",
     "ws": "^8.16.0",

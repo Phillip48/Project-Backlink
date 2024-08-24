@@ -3,7 +3,7 @@ const router = require('express').Router();
 const {
     getClients,
     getSingleClient,
-    // createClient,
+    createClient,
     updateClient,
     deleteClient
 } = require('../../controllers/clientController');
@@ -12,6 +12,7 @@ const {
 
 // Link Routes
 router.route('/client').get(getClients);
+router.route('/client').post(createClient);
 router.route('/clients/:id').get(getSingleClient).delete(deleteClient).put(updateClient);
 
 module.exports = router;
