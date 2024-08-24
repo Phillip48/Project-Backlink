@@ -123,7 +123,7 @@ export const clientSlice = createSlice({
       .addCase(getClient.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.links = action.payload;
+        state.client = action.payload;
       })
       .addCase(getClient.rejected, (state, action) => {
         state.isLoading = false;
@@ -136,7 +136,7 @@ export const clientSlice = createSlice({
       .addCase(createClient.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.links = action.payload;
+        state.client.push(action.payload);
       })
       .addCase(createClient.rejected, (state, action) => {
         state.isLoading = false;
@@ -149,8 +149,8 @@ export const clientSlice = createSlice({
       .addCase(deleteClient.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.links = state.links.filter(
-          (link) => link._id !== action.payload.id
+        state.client = state.client.filter(
+          (client) => client._id !== action.payload.id
         );
       })
       .addCase(deleteClient.rejected, (state, action) => {
