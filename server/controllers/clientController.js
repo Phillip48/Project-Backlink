@@ -29,6 +29,7 @@ const createClient = asyncHandler(async (req, res) => {
   const client = await Client.create({
     clientName: req.body.clientName,
     clientWebsite: req.body.clientWebsite,
+    clientLink: [],
   });
   if (res) {
     res.status(200).json(client);

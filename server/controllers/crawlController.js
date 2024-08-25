@@ -7,6 +7,7 @@ const proxy_checker = require("proxy-check");
 const fs = require("fs");
 const { parse } = require("csv-parse");
 const DBLINK = require("../models/Link");
+const DBCLIENT = require("../models/client");
 const uploadFile = require("../middleware/upload");
 const http = require("http");
 const https = require("https");
@@ -41,6 +42,9 @@ const nonClientLinks = [];
 
 // Arrays for the links and status resposne
 let crawledLinks = [];
+
+// Array for the clients data
+let allClientArrayData = [];
 
 // For the proxygenerator
 let proxyHost;
@@ -98,6 +102,8 @@ const dbPromise = (linkCrawled) => {
 };
 // JS Promise to se if the link is one of our internal sites or client sites
 const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
+  // let allClientWebsite = [];
+  // let findLinkClient ;
   return new Promise(async (resolve) => {
     // code
     if (
@@ -114,65 +120,96 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
       if (link.hostname) {
         link = link.hostname.replace("www.", "");
         link.toString();
-        // console.log(link);
+        console.log(link);
+        // This was in the IF statement for checking for client links
+        // link.includes("samndan.com") ||
+        // link.includes("https://samndan.com") ||
+        // link.includes("omaralawgroup.com") ||
+        // link.includes("https://omaralawgroup.com") ||
+        // link.includes("birthinjurycenter.org/") ||
+        // link.includes("https://birthinjurycenter.org/") ||
+        // link.includes("veternsguide.org") ||
+        // link.includes("https://veternsguide.org") ||
+        // link.includes("steinlawoffices.com") ||
+        // link.includes("https://steinlawoffices.com") ||
+        // link.includes("levinperconti.com") ||
+        // link.includes("https://levinperconti.com") ||
+        // link.includes("cordiscosaile.com") ||
+        // link.includes("https://cordiscosaile.com") ||
+        // link.includes("wvpersonalinjury.com") ||
+        // link.includes("https://wvpersonalinjury.com") ||
+        // link.includes("nstlaw.com") ||
+        // link.includes("https://nstlaw.com") ||
+        // link.includes("brownandcrouppen.com") ||
+        // link.includes("https://brownandcrouppen.com") ||
+        // link.includes("cutterlaw.com") ||
+        // link.includes("https://cutterlaw.com") ||
+        // link.includes("lanierlawfirm.com") ||
+        // link.includes("https://lanierlawfirm.com") ||
+        // link.includes("nursinghomeabuse.org") ||
+        // link.includes("https://nursinghomeabuse.org") ||
+        // link.includes("helpingsurvivors.org") ||
+        // link.includes("https://helpingsurvivors.org") ||
+        // link.includes("socialmediavictims.org") ||
+        // link.includes("https://socialmediavictims.org") ||
+        // link.includes("m-n-law.com") ||
+        // link.includes("https://m-n-law.com")
       }
       if (
-        link.includes("samndan.com") ||
-        link.includes("https://samndan.com") ||
-        link.includes("omaralawgroup.com") ||
-        link.includes("https://omaralawgroup.com") ||
-        link.includes("birthinjurycenter.org/") ||
-        link.includes("https://birthinjurycenter.org/") ||
-        link.includes("veternsguide.org") ||
-        link.includes("https://veternsguide.org") ||
-        link.includes("steinlawoffices.com") ||
-        link.includes("https://steinlawoffices.com") ||
-        link.includes("levinperconti.com") ||
-        link.includes("https://levinperconti.com") ||
-        link.includes("cordiscosaile.com") ||
-        link.includes("https://cordiscosaile.com") ||
-        link.includes("advologix.com") ||
-        link.includes("https://advologix.com") ||
-        link.includes("wvpersonalinjury.com") ||
-        link.includes("https://wvpersonalinjury.com") ||
-        link.includes("nstlaw.com") ||
-        link.includes("https://nstlaw.com") ||
-        link.includes("brownandcrouppen.com") ||
-        link.includes("https://brownandcrouppen.com") ||
-        link.includes("cutterlaw.com") ||
-        link.includes("https://cutterlaw.com") ||
-        link.includes("lanierlawfirm.com") ||
-        link.includes("http://lanierlawfirm.com") ||
-        link.includes("nursinghomeabuse.org") ||
-        link.includes("https://nursinghomeabuse.org") ||
-        link.includes("helpingsurvivors.org") ||
-        link.includes("https://helpingsurvivors.org") ||
-        link.includes("socialmediavictims.org") ||
-        link.includes("https://socialmediavictims.org") ||
-        link.includes("m-n-law.com") ||
-        link.includes("https://m-n-law.com")
+        allClientArrayData.find((client) => {
+          if (link.includes(client.clientWebsite)) {
+            // console.log('find function', client.clientWebsite)
+            return client._id;
+          }
+        })
       ) {
-        console.log(link);
-        console.log(urlFrom);
-        if (linkRel == "follow" || linkRel == "nofollow") {
-          anchorObj = {
-            URLFrom: urlFrom,
-            link: link,
-            text: linkText,
-            linkFollow: linkRel,
-            // dateFound: currentDate
-          };
-          crawledLinks.push(anchorObj), resolve;
-        } else {
-          anchorObj = {
-            URLFrom: urlFrom,
-            link: link,
-            text: linkText,
-            linkFollow: "No link Rel",
-            // dateFound: currentDate
-          };
-          crawledLinks.push(anchorObj), resolve;
-        }
+        console.log("184 URLFORM", urlFrom, "184 LINK", link);
+        // ================================================ //
+        let newLink = link.toString();
+        let newHostname = new URL(newLink);
+        let newClientHostname = newHostname.hostname;
+        newClientHostname.toString();
+        let finalHostname = newClientHostname.replace("www.", "");
+        const newClientName = allClientArrayData.find((client) => {
+          if (client.clientWebsite.includes(finalHostname)) {
+            // console.log("find function", client.clientName, client._id);
+            // console.log('find function', client);
+            return client._id;
+          }
+        });
+        // newClientName._id => shows object id from DB
+        // ================================================ //
+        anchorObj = {
+          URLFrom: urlFrom,
+          link: link,
+          text: linkText,
+          linkFollow: linkRel == "follow" ? "follow" : "nofollow",
+          client: newClientName._id,
+          // dateFound: currentDate
+        };
+        crawledLinks.push(anchorObj), resolve;
+        // resolved this with the inline coniditional statement
+        // if (linkRel == "follow" || linkRel == "nofollow") {
+        //   anchorObj = {
+        //     URLFrom: urlFrom,
+        //     link: link,
+        //     text: linkText,
+        //     linkFollow: linkRel,
+        //     clientName: "",
+        //     // dateFound: currentDate
+        //   };
+        //   crawledLinks.push(anchorObj), resolve;
+        // } else {
+        //   anchorObj = {
+        //     URLFrom: urlFrom,
+        //     link: link,
+        //     text: linkText,
+        //     linkFollow: "No link Rel",
+        //     clientName: "",
+        //     // dateFound: currentDate
+        //   };
+        //   crawledLinks.push(anchorObj), resolve;
+        // }
       } else {
         nonClientLinks.push({
           URLFrom: urlFrom,
@@ -184,10 +221,37 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
           linkFollow: "N/A",
         }),
           resolve;
-        // console.log('link removed', link);
       }
     } else {
       resolve;
+    }
+  });
+};
+
+// Calling all clients in DB
+const callAllClients = async () => {
+  return new Promise(async (resolve) => {
+    let executed = false;
+    try {
+      if (executed) {
+        return;
+      }
+      // Calling all clients
+      allClientArrayData = await DBCLIENT.find();
+      // allClientArrayData.push(allClient);
+      let forEachBLPCounter = 0;
+      // console.log(allClient[forEachBLPCounter]);
+      // DBCLIENT
+      // console.log("All clients in backlink promise", allClientArrayData);
+      console.log("All clients in backlink promise 2", allClientArrayData);
+      allClient[forEachBLPCounter].forEach(
+        (client) => console.log("client by number", client[forEachBLPCounter]),
+        // clientWebsite.includes(clientWebsite),
+        forEachBLPCounter++
+      );
+      return allClient;
+    } catch (e) {
+      return false;
     }
   });
 };
@@ -200,6 +264,7 @@ const backLinkPromise = (urlFrom, link, linkRel, linkText) => {
 // Inital crawl to get anchor tags with href attr
 const CSVCrawlLink = asyncHandler(async (req, response) => {
   // Step : Gets links from CSV file
+  callAllClients();
   try {
     await uploadFile(req, response);
     fileName = req.file;
@@ -230,7 +295,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           console.log(error.message);
         })
         .on("end", function () {
-          console.log("Links from reader:", csvLinks);
+          // console.log("Links from reader:", csvLinks);
           console.log("CSV scan finished");
           setTimeout(async function () {
             await sleep(4000);
@@ -245,6 +310,15 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
       message: `Could not upload the file. ${err}`,
     });
   }
+  // =============================================================== //
+
+  // Calling all clients in DB
+  // const allClient = await DBCLIENT.find({ client: req.client.id });
+  // allClientArrayData.push(allClient);
+  // console.log("all clients", allClient);
+  // console.log("all client data in array", allClientArrayData);
+
+  // =============================================================== //
   const httpAgent = new http.Agent({ keepalive: true });
   const httpsAgent = new https.Agent({ keepAlive: true });
   httpAgent.maxSockets = 5;
@@ -288,6 +362,7 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           linkStatus: "Error",
           statusText: "Error",
           linkFollow: "Error",
+          clientName: "Error",
         });
         console.log("\u001b[1;31m Conditonal Error", error.stack);
         console.log("Continuing");
@@ -321,13 +396,13 @@ const CSVCrawlLink = asyncHandler(async (req, response) => {
           done();
         }
         // =========================================================1 //
-        numberOn = csvCount;
-        numberTo = csvLinks.length;
-        let progressUpdater
-        progressUpdater = `${numberOn} / ${numberTo}`;
-        console.log('CC',progressUpdater);
-        const socketEventUpdate = require('../middleware/socketsMiddleware');
-        socketEventUpdate(progressUpdater);
+        // numberOn = csvCount;
+        // numberTo = csvLinks.length;
+        // let progressUpdater;
+        // progressUpdater = `${numberOn} / ${numberTo}`;
+        // console.log("CC", progressUpdater);
+        // const socketEventUpdate = require("../middleware/socketsMiddleware");
+        // socketEventUpdate(progressUpdater);
         // ========================================================= //
         if (res.statusCode == 200) {
           console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
@@ -420,11 +495,11 @@ const statusCheckV2 = async (array, response) => {
     ) {
       await sleep(5000);
       // =========================================================1 //
-      numberOn = forEachCounter;
-      numberTo = array.length;
-      let progressUpdater
-      module.exports = progressUpdater = `${numberOn} / ${numberTo}`;
-      console.log('CC',progressUpdater);
+      // numberOn = forEachCounter;
+      // numberTo = array.length;
+      // let progressUpdater;
+      // module.exports = progressUpdater = `${numberOn} / ${numberTo}`;
+      // console.log("CC", progressUpdater);
       // const wss = require("../server");
       // wss.send("Sending progress data", progressUpdater);;
       // console.log('wss', wss);
@@ -480,6 +555,7 @@ const statusCheckV2 = async (array, response) => {
             linkStatus: "Not a valid link!!!!",
             statusText: "Not a valid link!!!!",
             linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+            client: newLinkCrawled[forEachCounter].client,
           };
           dbCounter++;
           csvWriteLinks.push(dbPromiseObject);
@@ -509,6 +585,7 @@ const statusCheckV2 = async (array, response) => {
               linkStatus: response.status,
               statusText: response.statusText,
               linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+              client: newLinkCrawled[forEachCounter].client,
             };
             // console.log(dbPromiseObject);
             dbCounter++;
@@ -544,6 +621,7 @@ const statusCheckV2 = async (array, response) => {
                   linkStatus: response.status,
                   statusText: response.statusText,
                   linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+                  client: newLinkCrawled[forEachCounter].client,
                 };
                 // console.log(dbPromiseObject);
 
@@ -602,6 +680,7 @@ const statusCheckV2 = async (array, response) => {
                     linkStatus: "Error on this link",
                     statusText: "Error on this link",
                     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+                    client: newLinkCrawled[forEachCounter].client,
                   };
                   // console.log(dbPromiseObject);
 
@@ -619,6 +698,7 @@ const statusCheckV2 = async (array, response) => {
                     linkStatus: "Error on this link",
                     statusText: "Error on this link",
                     linkFollow: newLinkCrawled[forEachCounter].linkFollow,
+                    client: newLinkCrawled[forEachCounter].client,
                   };
                   dbCounter++;
                   csvWriteLinks.push(dbPromiseObject);

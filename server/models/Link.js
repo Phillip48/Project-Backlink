@@ -10,10 +10,10 @@ let format = month + '/' + day + '/' + year;
 // Schema to create Link model
 const linkSchema = new Schema(
     {
-        clientName: {
+        client: {
             type: Schema.Types.ObjectId,
             required: true,
-            ref: 'Client',
+            ref: 'client',
         },
         urlFrom: {
             type: String,

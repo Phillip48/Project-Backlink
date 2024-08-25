@@ -1,5 +1,5 @@
 const { ObjectId } = require("mongoose").Types;
-const { Link } = require("../models");
+const { Link, Client } = require("../models");
 const asyncHandler = require("express-async-handler");
 
 // Get all links
@@ -42,7 +42,8 @@ const createLink = asyncHandler(async (req, res) => {
   //   res.status(401);
   //   throw new Error("Client not found");
   // }
-  const link = await Link.create({
+  console.log("req in link creation", req);
+  const clientLinkAdd = await Link.create({
     urlFrom: req.urlFrom,
     urlTo: req.urlTo,
     text: req.text,
@@ -51,8 +52,16 @@ const createLink = asyncHandler(async (req, res) => {
     linkFollow: req.linkFollow,
     dateFound: req.dateFound,
     dateLastChecked: req.dateLastChecked,
-    clientName: req.clientName.id,
+    client: req.client,
   });
+
+  // { _id: req.client }
+  const client = await Client.findByIdAndUpdate(
+    { _id: req.client },
+    { $addToSet: { clientLink: clientLinkAdd } },
+    { runValidators: true, new: true }
+  );
+  
   if (res) {
     res.status(200).json("Finished creating links");
   } else {

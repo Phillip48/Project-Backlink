@@ -1,29 +1,30 @@
-const { Schema, model } = require('mongoose');
+const { Schema, model } = require("mongoose");
 
 // Schema to create Link model
 const clientSchema = new Schema(
-    {
-        clientName: {
-            type: String,
-            required: true,
-        },
-        clientWebsite: {
-            type: String,
-            required: true,
-        },
-        clientLink: {
-            type: Schema.Types.ObjectId,
-            // required: true,
-            ref: 'Link',
-        },
+  {
+    clientName: {
+      type: String,
+      required: true,
     },
-    {
-        toJSON: {
-            getters: true,
-        },
-    }
+    clientWebsite: {
+      type: String,
+      required: true,
+    },
+    clientLink: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "link",
+      },
+    ],
+  },
+  {
+    toJSON: {
+      getters: true,
+    },
+  }
 );
 
-const Client = model('client', clientSchema);
+const Client = model("client", clientSchema);
 
 module.exports = Client;
