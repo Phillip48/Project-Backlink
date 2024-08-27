@@ -45,6 +45,7 @@
   cursor: pointer;
   text-decoration: none;
   color: black;
+  padding:5px;
 }
 
 .header-nav-a-tag:hover {
@@ -76,6 +77,15 @@
 /* ================ */
 /* Link page and Item */
 
+.hold_info_wrapper{
+  display: flex;
+  flex-direction: row;
+}
+
+.links_title, .clients_title{
+  width:50%;
+}
+
 .links_results{
   display: flex;
   flex-direction: column;
@@ -95,6 +105,17 @@
 #downloadButton{
   display:none;
   margin-top: 10px;
+}
+/*  */
+.main_links_section{
+  display:flex;
+  flex-direction: column;
+  padding:15px;
+}
+/*  */
+
+.holds-log-forms{
+  padding-top:10px;
 }
 
 /* 

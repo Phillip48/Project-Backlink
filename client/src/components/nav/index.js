@@ -8,8 +8,8 @@ function Nav() {
             </div>
 
             <div className="header-links">
-                <a className="header-nav-a-tag" href="/client">Create Client</a>
-                <a style={{marginLeft: '20px;'}} className="header-nav-a-tag" href="/crawl">Crawl</a>
+                <a className="header-nav-a-tag" href="/client">Client</a>
+                <a className="header-nav-a-tag" href="/crawl">Crawl</a>
             </div>
         </header>
     );

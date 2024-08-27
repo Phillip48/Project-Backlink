@@ -9,7 +9,7 @@ import {
   deleteClient,
   reset,
 } from "../../src/features/clients/clientSlice";
-// import ClientItem from "../components/items/clientItem";
+import ClientItem from "../components/items/clientItem";
 
 const ClientPage = () => {
   let clientCount = 0;
@@ -22,16 +22,25 @@ const ClientPage = () => {
     clientName: "",
     clientWebsite: "",
   });
-  const { clientName, clientWebsite } = clientState;
+  // const { clientName, clientWebsite } = clientState;
 
   const clientStatCounter = () => {
     if (client) {
       client.forEach((client) => {
         clientCount++;
       });
-      return clientCount;
+      return <p>Total Clients: {clientCount}</p>;
     } else {
-      return "No clients";
+      return <p>No clients</p>;
+    }
+  };
+
+  const clientCheck = () => {
+    console.log('client checker', client);
+    if (client) {
+      return client.map((client) => <ClientItem key={client.id} client={client} />);
+    } else{
+      return <p>No clients!</p>
     }
   };
 
@@ -60,6 +69,7 @@ const ClientPage = () => {
     if (isError) {
       console.log(message);
     }
+    dispatch(getClient());
 
     return () => {
       dispatch(reset());
@@ -73,10 +83,16 @@ const ClientPage = () => {
   return (
     <section className="main_links_section">
       <div className="links_title">
-        <h3>All Clients:</h3>
-        <h3>Total Clients:{clientStatCounter()}</h3>
+        <h2>Add Client:</h2>
       </div>
       <div>
+        <h4>Instructions</h4>
+        <p>
+          When inputting a new client you need to only add the hostname for the
+          website. For example, if the website is https://lawfirm.com/ you will
+          only put lawfirm.com
+        </p>
+        <b>This is crutical for the crawler to look for the client links</b>
         <form onSubmit={handleFormSubmit} className="holds-log-forms">
           <Col md={12} className="user-grades-inputs-col">
             <FormGroup>
@@ -114,6 +130,10 @@ const ClientPage = () => {
             Create Client
           </button>
         </div>
+      </div>
+      <div>
+      {clientStatCounter()}
+      {clientCheck()}
       </div>
     </section>
   );
