@@ -32,6 +32,12 @@ const getLinks = async () => {
   return response.data;
 };
 
+const getSingleLink = async (clientID) => {
+  console.log('link id in links service', clientID);
+  const response =  await axios.get(API_URL + "links/" + clientID);
+  return response.data;
+};
+
 
 const recheckLinks = async () => {
   const response = await axios.get("/api/crawler/recheck");
@@ -41,6 +47,7 @@ const recheckLinks = async () => {
 const linksService = {
   crawlSite,
   getLinks,
+  getSingleLink,
   // gscCrawl,
   recheckLinks
 };

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
 import {
   getLinks,
+  getSingleLink,
   deleteLinks,
   reset,
 } from "../../src/features/links/linksSlice";
@@ -35,9 +36,8 @@ const LinkPage = () => {
 
   const clientCheck = () => {
     // let forEachCounter = 0;
-    // console.log("links checker", links);
+    // console.log("links checker", links);  // Gives an array iof objects that has the link data
     // console.log("client checker", client);
-
     // const returnLinkArray = links.forEach((link) => {
     //   forEachCounter ++;
     //   let indClient = client[forEachCounter].clientLink; // Inside array of objects that is link ID
@@ -55,6 +55,27 @@ const LinkPage = () => {
     // })
 
     if (client) {
+      // console.log('links', links);
+      // [ {CLIENT OBJECT, _id}, ... ETC ]
+      // console.log('clients', client)
+      // [ {CLIENT OBJECT, [ {link ids} ] }... ETC ]
+      // for (let i = 0; i < links.length; i++) {
+      //   const element = links[i]._id;
+      //   console.log('ID', element);
+
+      // }
+
+      // for (let i = 0; i < client.length; i++) {
+      //   const element = client[i];
+      //   // console.log(element.clientLink);
+      //   let clientLink= element.clientLink;
+      //   if(clientLink.length > 0){
+      //     for (let i = 0; i < clientLink.length; i++) {
+      //       const element2 = clientLink[i];
+      //       // console.log('Link ID from client', element2)
+      //     }
+      //   }
+      // }
       return client.map((client) => (
         <ClientItem key={client.id} client={client} links={links}/>
       ));
