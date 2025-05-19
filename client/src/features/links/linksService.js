@@ -8,6 +8,34 @@ const crawlSite = async (formData) => {
   };
   const response = await axios
     .post("/api/crawler/upload", formData, headers)
+    // crawlHeadingsController / upload
+    .then((res) => {
+      console.log(res);
+      return res;
+    });
+  return response;
+};
+
+const crawlSiteHeadingsCSV = async (formData) => {
+  const headers = {
+    "Content-Type": "multipart/form-data",
+  };
+  const response = await axios
+    .post("/api/crawler/upload2", formData, headers)
+    // crawlHeadingsController / upload
+    .then((res) => {
+      console.log(res);
+      return res;
+    });
+  return response;
+};
+const crawlSiteHeadingsURL = async (formData) => {
+  const headers = {
+    "Content-Type": "multipart/form-data",
+  };
+  const response = await axios
+    .post("/api/crawler/upload3", formData, headers)
+    // crawlHeadingsController / upload
     .then((res) => {
       console.log(res);
       return res;
@@ -46,6 +74,8 @@ const recheckLinks = async () => {
 
 const linksService = {
   crawlSite,
+  crawlSiteHeadingsURL,
+  crawlSiteHeadingsCSV,
   getLinks,
   getSingleLink,
   // gscCrawl,

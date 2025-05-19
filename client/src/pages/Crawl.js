@@ -7,6 +7,8 @@ import io from "socket.io-client";
 import {
   createLink,
   crawlLink,
+  crawlLinkHeadingsCSV,
+  crawlLinkHeadingsURL,
   recheckLinks,
   deleteLinks,
 } from "../../src/features/links/linksSlice";
@@ -31,8 +33,10 @@ function CrawlPage() {
   const [inputFile, setInputFile] = useState("");
   const [inputFileName, setInputFileName] = useState("");
   const [formState, setFormState] = useState("");
+  const [formData, setFormData] = useState({ url: "" });
   const [socketState, setSocketState] = useState("");
 
+  // Handle change for file input
   const handleChange = (event) => {
     // Emit worked ->
     // socket.emit('message', 'handleChange');
@@ -40,9 +44,82 @@ function CrawlPage() {
     setInputFileName(event.target.files[0].name);
     setFormState({ ...formState, [event.target.name]: event.target.value });
   };
-
-  // submit form
+  // Handle change for url input
+  const handleChangeURL = (event) => {
+    setFormData({ ...formData, url: event.target.value });
+    // console.log("event", event.target.value);
+    // setFormState({...formState, url: event.target.value});
+  };
+  // submit form to get headings of a specific url
+  const handleFormSubmitURL = async (event) => {
+    event.preventDefault();
+    document.getElementById("outputCode").innerHTML = "";
+    console.log("formData", formData);
+    dispatch(crawlLinkHeadingsURL(formData))
+      .then(async (res) => {
+        let newData = res.payload.data;
+        let clientData = newData;
+        console.log("client links", clientData);
+        if (clientData == "No headings found") {
+          return alert("No headings found");
+        }
+        // downloadCSV(clientData);
+        pasteCodeToDiv(newData);
+        setFormData({});
+      })
+      .catch((error) => console.log(error));
+    setFormData({});
+  };
+  // submit form for backlinks
+  const handleFormSubmitHeadingCSV = async (event) => {
+    let formData = new FormData();
+    formData.append("csvFile", inputFile);
+    event.preventDefault();
+    dispatch(crawlLinkHeadingsCSV(formData))
+      .then(async (res) => {
+        let newData = res.payload.data;
+        // let clientData = newData[1];
+        // let otherData = newData[0];
+        // Puts both files together
+        // const allData = clientData.concat(otherData);
+        let clientData = newData;
+        console.log("client links", clientData);
+        // console.log("other links", otherData);
+        if (clientData == "No links found") {
+          return alert("No links found");
+        }
+        downloadCSV(clientData);
+        setFormState({});
+      })
+      .catch((error) => console.log(error));
+    // setFormState({});
+  };
+  // submit form for backlinks
   const handleFormSubmit = async (event) => {
+    let formData = new FormData();
+    formData.append("csvFile", inputFile);
+    event.preventDefault();
+    dispatch(crawlLink(formData))
+      .then(async (res) => {
+        let newData = res.payload.data;
+        // let clientData = newData[1];
+        // let otherData = newData[0];
+        // Puts both files together
+        // const allData = clientData.concat(otherData);
+        let clientData = newData;
+        console.log("client links", clientData);
+        // console.log("other links", otherData);
+        if (clientData == "No links found") {
+          return alert("No links found");
+        }
+        downloadCSV(clientData);
+        setFormState({});
+      })
+      .catch((error) => console.log(error));
+    // setFormState({});
+  };
+  // submit form for headings
+  const handleFormSubmitHeadings = async (event) => {
     let formData = new FormData();
     formData.append("csvFile", inputFile);
     event.preventDefault();
@@ -93,12 +170,94 @@ function CrawlPage() {
   //   });
   //   return result;
   // }
+
+  //
+  function escapeHTML(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function pasteCodeToDiv(array) {
+    const rawHtml = generateHtmlCode(array);
+    const escapedHtml = escapeHTML(rawHtml);
+    const outputDiv = document.getElementById("outputCode");
+
+    outputDiv.innerHTML = `<pre><code>${escapedHtml}</code></pre>`;
+  }
+
+  function generateHtmlCode(array) {
+    let html = `<ul>\n`;
+
+    for (const row of array) {
+      const { cleanedHeading, normalHeading } = row;
+      if (cleanedHeading && normalHeading) {
+        html += `  <li><a href="#${cleanedHeading}">${normalHeading}</a></li>\n`;
+      }
+    }
+
+    html += `</ul>`;
+    return html;
+  }
+  // function createCSV(array) {
+  //   // code for html snippet
+  //   let rawHtml = `<ul>\n`;
+
+  //   for (const row of array) {
+  //     const { cleanedHeading, normalHeading } = row;
+  //     if (cleanedHeading && normalHeading) {
+  //       rawHtml += `  <li><a href="#${cleanedHeading}">${normalHeading}</a></li>\n`;
+  //     }
+  //   }
+
+  //   rawHtml += `</ul>`;
+
+  //   const escapedHtml = escapeHTML(rawHtml);
+
+  //   const html = `
+  //     <html>
+  //       <head><meta charset="utf-8"><title>HTML Snippet</title></head>
+  //       <body>
+  //         <h1>HTML Snippet</h1>
+  //         <pre><code>${escapedHtml}</code></pre>
+  //       </body>
+  //     </html>
+  //   `;
+
+  //   return html;
+  //   // code for csv
+  //   // console.log(array);
+  //   // const csvRows = [];
+  //   // // const headers = Object.keys(data[0]);
+  //   // // let keys = Object.keys(array[0]); //Collects Table Headers
+  //   // const headers = [
+  //   //   "headings"
+  //   // ];
+
+  //   // /* Using push() method we push fetched data into csvRows[] array */
+  //   // csvRows.push(headers.join(","));
+
+  //   // // Loop to get value of each objects key
+  //   // for (const row of array) {
+  //   //   const values = headers.map((header) => {
+  //   //     const val = row[header];
+  //   //     return `"${val}"`;
+  //   //   });
+
+  //   //   // To add, separator between each value
+  //   //   csvRows.push(values.join(","));
+  //   // }
+
+  //   // /* To add new line for each objects values and this return statement array csvRows
+  //   // to this function.*/
+  //   // return csvRows.join("\n");
+  // }
   function createCSV(array) {
     console.log(array);
-    const csvRows = [];
-    // const headers = Object.keys(data[0]);
     // let keys = Object.keys(array[0]); //Collects Table Headers
-    const headers = [
+    const keys = [
       "urlFrom",
       "urlTo",
       "text",
@@ -106,42 +265,52 @@ function CrawlPage() {
       "statusText",
       "linkFollow",
     ];
+    console.log(keys);
 
-    /* Using push() method we push fetched data into csvRows[] array */
-    csvRows.push(headers.join(","));
+    let result = ""; //CSV Contents
+    result += keys.join(","); //Comma Seperates Headers
+    result += "\n"; //New Row
 
-    // Loop to get value of each objects key
-    for (const row of array) {
-      const values = headers.map((header) => {
-        const val = row[header];
-        return `"${val}"`;
+    // Might need to change this as its an object not an array
+    array.forEach(function (item) {
+      //Goes Through Each Array Object
+      keys.forEach(function (key) {
+        //Goes Through Each Object value
+        result += item[key] + ","; //Comma Seperates Each Key Value in a Row
       });
-
-      // To add, separator between each value
-      csvRows.push(values.join(","));
-    }
-
-    /* To add new line for each objects values and this return statement array csvRows
-    to this function.*/
-    return csvRows.join("\n");
+      result += "\n"; //Creates New Row
+    });
+    return result;
   }
 
   const downloadCSV = (newData) => {
-    // const buttonID = document.getElementById('downloadButton'); // Target button by id
-    // let payloadData = newData;
-    // let header = Object.keys(payloadData[0]).join(",");
-    // let values = payloadData.map((o) => Object.values(o).join(",")).join("\n");
-    // csv += header + "\n" + values;
-    console.log(newData);
-    csv = "data:text/csv;charset=utf-8," + createCSV(newData);
-    excel = encodeURI(csv); //Links to CSV
-    link = document.createElement("a");
-    link.setAttribute("href", excel); //Links to CSV File
-    link.setAttribute("download", "output.csv"); //Filename that CSV is saved as
-    // buttonID.style.display = "block"; // Display Button
-    // buttonID.setAttribute("download", "output.csv"); // Add functionality to download the csv from the button
+    const htmlContent = createCSV(newData);
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "output.html"; // ← Not .doc
+    document.body.appendChild(link);
     link.click();
-    // console.log("formstate", formState);
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    // // const buttonID = document.getElementById('downloadButton'); // Target button by id
+    // // let payloadData = newData;
+    // // let header = Object.keys(payloadData[0]).join(",");
+    // // let values = payloadData.map((o) => Object.values(o).join(",")).join("\n");
+    // // csv += header + "\n" + values;
+    // console.log(newData);
+    // csv = "data:application/msword;charset=utf-8," + createCSV(newData);
+    // // doc = "data:application/msword;charset=utf-8,"
+    // excel = encodeURI(csv); //Links to CSV
+    // link = document.createElement("a");
+    // link.setAttribute("href", excel); //Links to CSV File
+    // link.setAttribute("download", "output.doc"); //Filename that CSV is saved as
+    // // buttonID.style.display = "block"; // Display Button
+    // // buttonID.setAttribute("download", "output.csv"); // Add functionality to download the csv from the button
+    // link.click();
+    // // console.log("formstate", formState);
   };
 
   // const handleFormSubmitRecheck = async (event) => {
@@ -155,17 +324,17 @@ function CrawlPage() {
     if (isError) {
       console.log(message);
     }
-    socket.on('connection', (msg) => {
+    socket.on("connection", (msg) => {
       socket.emit("message", "Client connected");
-      console.log('Message', msg);
+      console.log("Message", msg);
     });
-    socket.on('message', (msg) => {
+    socket.on("message", (msg) => {
       socket.emit("message", "Message received");
-      console.log('Message', msg);
+      console.log("Message", msg);
     });
-    socket.on('send message', (msg) => {
+    socket.on("send message", (msg) => {
       socket.emit("message", "Message received");
-      console.log('Message', msg);
+      console.log("Message", msg);
     });
   }, [isError, message, socket]);
 
@@ -196,7 +365,9 @@ function CrawlPage() {
             className="crawl-form"
             id="csvFile_upload"
           >
-            <span>CSV file:</span>
+            <span style={{ marginTop: "20px", marginBottom: "-10px"  }}>
+              Crawl for Backlinks <br></br>CSV file:
+            </span>
             <br></br>
             <input
               type="file"
@@ -217,6 +388,64 @@ function CrawlPage() {
           </form>
         </div>
       </div>
+      <div className="search-container">
+        <form
+          enctype="multipart/form-data"
+          className="crawl-form"
+          id="csvFile_upload"
+        >
+          <span style={{ marginTop: "20px", marginBottom: "-10px"  }}>
+            Crawl for H2 <br></br>CSV file:
+          </span>
+          <br></br>
+          <input
+            type="file"
+            id="csvFile_input"
+            // name="csvFile"
+            accept=".csv"
+            value={formState.csvFile}
+            onChange={handleChange}
+            webkitdirectory
+            multiple
+          />
+          <button
+            id="myButton"
+            type="submit"
+            onClick={handleFormSubmitHeadingCSV}
+          >
+            Submit
+          </button>
+          {/* <button id="downloadButton" type="download">
+              Download
+            </button> */}
+        </form>
+      </div>
+      <div className="search-container">
+        <form
+          // enctype="multipart/form-data"
+          className="crawl-form"
+          id="csvFile_upload"
+        >
+          <span style={{ marginTop: "20px", marginBottom: "0px" }}>Crawl URL for Headings</span>
+          <input
+            type="text"
+            id="csvFile_input"
+            // name="csvFile"
+            // accept=".csv"
+            value={formData.url}
+            onChange={handleChangeURL}
+            webkitdirectory
+            multiple
+          />
+          <button id="myButton2" type="submit" onClick={handleFormSubmitURL}>
+            Submit URL
+          </button>
+          {/* <button id="downloadButton" type="download">
+              Download
+            </button> */}
+        </form>
+      </div>
+      <div id="outputCode" style={{ fontSize: "10px" }}></div>
       {/* <div className="crawl_link_links">
         <a href="/gscLinks">Upload a GSC CSV File</a>
       </div>

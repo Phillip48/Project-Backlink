@@ -17,6 +17,7 @@ const axios = require("axios");
 // Call functions needed to add to the db
 const { createLink } = require("../controllers/linkController");
 const { setMaxListeners } = require("events");
+const { set } = require("mongoose");
 
 // ===================================== Important ===================================== //
 const maxArrayLength = 5; // Sets the number of list items in array you see in the terminal; Could be "null" to see all of them
@@ -37,6 +38,7 @@ let crawlingURL;
 // Array for links read from the CSV
 const csvLinks = [];
 const csvWriteLinks = [];
+let csvWriteHeadings = [];
 const newURLCSVLinks = [];
 const nonClientLinks = [];
 
@@ -714,7 +716,331 @@ const statusCheckV2 = async (array, response) => {
   runningArrayV2(array);
 };
 
+// Inital crawl to get H2 from the page
+const CSVH2CrawlLink = asyncHandler(async (req, response) => {
+  try {
+    await uploadFile(req, response);
+    fileName = req.file;
+    if (req.file == undefined) {
+      return response.status(400).send({ message: "Please upload a file!" });
+    }
+    // rename file so it's always the same // Was in a timeout - removed timeout
+    fs.rename(
+      `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
+      `${__basedir}/resources/static/assets/uploads/crawlcsv.csv`,
+      (err) => {
+        if (err) throw err;
+        console.log("\nFile Renamed!\n");
+      }
+    );
+    // Read the csv file and get the links
+    setTimeout(async function () {
+      fs.createReadStream(
+        __basedir + `/resources/static/assets/uploads/crawlcsv.csv`
+      )
+        .pipe(parse({ delimiter: ",", from_line: 2 }))
+        .on("data", function (row) {
+          firstLinks = [...row].shift();
+          firstLinks.trim();
+          csvLinks.push(firstLinks);
+        })
+        .on("error", function (error) {
+          console.log(error.message);
+        })
+        .on("end", function () {
+          // console.log("Links from reader:", csvLinks);
+          console.log("CSV scan finished");
+          setTimeout(async function () {
+            await sleep(4000);
+            // proxyGenerator();
+            crawlerInstance.queue(csvLinks);
+          }, 1000);
+        });
+    }, 1000);
+  } catch (err) {
+    console.log(err);
+    response.sendStatus(500).send({
+      message: `Could not upload the file. ${err}`,
+    });
+  }
+  const httpAgent = new http.Agent({ keepalive: true });
+  const httpsAgent = new https.Agent({ keepAlive: true });
+  httpAgent.maxSockets = 2;
+  httpsAgent.maxSockets = 2;
+  const agent = (_parsedURL) =>
+    _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+  // Step : Create an instance of a new crawler
+  const crawlerInstance = new Crawler({
+    headers: {
+      // The User-Agent request header passes information related to the identification of application type, operating system, software, and its version, and allows for data target to decide what type of HTML layout to use in response i.e. mobile, tablet, or pc.
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+      // The Accept-Language request header passes information indicating to a web server which languages the client understands, and which particular language is preferred when the web server sends the response back.
+      "Accept-Language": "en-gb",
+      // The Accept request header falls into a content negotiation category, and its purpose is to notify the web server on what type of data format can be returned to the client.
+      Accept: "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      // The Referer request header provides the previous web page’s address before the request is sent to the web server.
+      // Referer: "http://www.google.com/",
+      method: "GET",
+      credentials: "include",
+      agent: "http:" ? httpAgent : httpsAgent,
+    },
+    // jQuery: true,
+    // family: 4,
+    retries: 0, // The crawlers internal code will retry -> I don't think it ends up working the 2 time.
+    rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
+    maxConnections: 1, // maxConnections is the maximum number of tasks that can be running at the same time
+
+    // Will be called for each crawled page
+    callback: (error, res, done) => {
+      if (error) {
+        initalCrawlCount++;
+        sleep(1000);
+        csvWriteHeadings.push({
+          urlFrom: res.options.uri,
+          headings: "Error",
+        });
+        console.log("\u001b[1;31m Conditonal Error", error.stack);
+        console.log("Continuing");
+        if (csvLinks.length == initalCrawlCount) {
+          if (csvWriteHeadings.length === 0) {
+            console.log("No headings found", "806");
+            response.status(200).json("No headings");
+            return;
+          } else {
+            // nothing
+          }
+        }
+        done();
+      } else {
+        csvCount++;
+        initalCrawlCount++;
+        if (
+          res.request === null ||
+          res.$ === null ||
+          res.$ === undefined ||
+          res === null ||
+          res === undefined ||
+          res.request === undefined
+        ) {
+          console.log(`\u001b[1;31m Protocol undefined ->`, res.options.uri);
+          csvWriteLinks.push({
+            urlFrom: res.options.uri,
+            headings: "Error protocol undefined",
+          });
+          done();
+        }
+        if (res.statusCode == 200) {
+          console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
+        } else if (res.statusCode == 404 || res.statusCode == 403) {
+          console.log(
+            `\u001b[1;31m Status code: ${res.statusCode} ->`,
+            res.options.uri
+          );
+        } else {
+          console.log(
+            `\u001b[1;31m Status code: ${res.statusCode} ->`,
+            res.options.uri
+          );
+        }
+        // Looking for headings in the HTML
+        const $ = res.$;
+        if ($) {
+          const headingTags = $("h2");
+          headingTags.each(async function (index, element) {
+            const text = $(element).text().trim();
+            if (text) {
+              // const dashedHeading = text.replace(/\s+/g, "-"); // Replace all spaces (including tabs) with dashes
+              const cleanedHeading = text
+                .replace(/'/g, "") // Remove all apostrophes
+                .replace(/,/g, "") // Remove commas
+                .replace(/\s+/g, "-"); // Replace all whitespace with dashes
+
+              console.log(`H2 #${index + 1}:`, text);
+              console.log(`H2 #${index + 1}:`, cleanedHeading);
+              csvWriteHeadings.push({
+                normalHeading: text,
+                cleanedHeading: cleanedHeading,
+                index: index + 1,
+              });
+            }
+          });
+          console.log("-------------------------------------------");
+          if (csvLinks.length == initalCrawlCount) {
+            if (csvWriteHeadings.length == 0) {
+              console.log("No headings found", "877");
+              response.status(200).json("No headings found 877");
+              return;
+            } else {
+              // console.log("CSV write headings", csvWriteHeadings);
+              response.status(200).send(JSON.stringify(csvWriteHeadings));
+              // response.status(200).json("File uploading and being crawled");
+            }
+          }
+          done();
+        } else {
+          console.log("error -> $");
+          done();
+        }
+      }
+    },
+  });
+});
+
+// Inital crawl to get H2 from the page
+const CSVH2CrawlLinkURL = asyncHandler(async (req, response) => {
+  try {
+    // await uploadFile(req, response);
+    url = req.body.url;
+    url.toString();
+    url = url.trim();
+    setTimeout(async function () {
+      console.log("URL", url);
+      await sleep(2000);
+      crawlerInstance.queue(url);
+    }, 1000);
+    // if (req.file == undefined) {
+    //   return response.status(400).send({ message: "Please upload a file!" });
+    // }
+    // // rename file so it's always the same // Was in a timeout - removed timeout
+    // fs.rename(
+    //   `${__basedir}/resources/static/assets/uploads/${req.file.originalname}`,
+    //   `${__basedir}/resources/static/assets/uploads/crawlcsv.csv`,
+    //   (err) => {
+    //     if (err) throw err;
+    //     console.log("\nFile Renamed!\n");
+    //   }
+    // );
+    // Read the csv file and get the links
+    // setTimeout(async function () {
+    //   fs.createReadStream(
+    //     __basedir + `/resources/static/assets/uploads/crawlcsv.csv`
+    //   )
+    //     .pipe(parse({ delimiter: ",", from_line: 2 }))
+    //     .on("data", function (row) {
+    //       firstLinks = [...row].shift();
+    //       firstLinks.trim();
+    //       csvLinks.push(firstLinks);
+    //     })
+    //     .on("error", function (error) {
+    //       console.log(error.message);
+    //     })
+    //     .on("end", function () {
+    //       // console.log("Links from reader:", csvLinks);
+    //       console.log("CSV scan finished");
+    //       setTimeout(async function () {
+    //         await sleep(4000);
+    //         // proxyGenerator();
+    //         crawlerInstance.queue(csvLinks);
+    //       }, 1000);
+    //     });
+    // }, 1000);
+  } catch (err) {
+    console.log(err);
+    response.sendStatus(500).send({
+      message: `Could not upload the file. ${err}`,
+    });
+  }
+  const httpAgent = new http.Agent({ keepalive: true });
+  const httpsAgent = new https.Agent({ keepAlive: true });
+  httpAgent.maxSockets = 2;
+  httpsAgent.maxSockets = 2;
+  const agent = (_parsedURL) =>
+    _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+  // Step : Create an instance of a new crawler
+  const crawlerInstance = new Crawler({
+    headers: {
+      // The User-Agent request header passes information related to the identification of application type, operating system, software, and its version, and allows for data target to decide what type of HTML layout to use in response i.e. mobile, tablet, or pc.
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+      // The Accept-Language request header passes information indicating to a web server which languages the client understands, and which particular language is preferred when the web server sends the response back.
+      "Accept-Language": "en-gb",
+      // The Accept request header falls into a content negotiation category, and its purpose is to notify the web server on what type of data format can be returned to the client.
+      Accept: "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      // The Referer request header provides the previous web page’s address before the request is sent to the web server.
+      // Referer: "http://www.google.com/",
+      method: "GET",
+      credentials: "include",
+      agent: "http:" ? httpAgent : httpsAgent,
+    },
+    // jQuery: true,
+    // family: 4,
+    retries: 0, // The crawlers internal code will retry -> I don't think it ends up working the 2 time.
+    rateLimit: 1000, // `maxConnections` will be forced to 1 - rateLimit is the minimum time gap between two tasks
+    maxConnections: 1, // maxConnections is the maximum number of tasks that can be running at the same time
+
+    // Will be called for each crawled page
+    callback: (error, res, done) => {
+      if (error) {
+        console.log("\u001b[1;31m Conditonal Error", error.stack);
+        done();
+      } else {
+        if (
+          res.request === null ||
+          res.$ === null ||
+          res.$ === undefined ||
+          res === null ||
+          res === undefined ||
+          res.request === undefined
+        ) {
+          console.log(`\u001b[1;31m Protocol undefined ->`, res.options.uri);
+          csvWriteLinks.push({
+            // urlFrom: res.options.uri,
+            headings: "Error protocol undefined",
+          });
+          done();
+        }
+        if (res.statusCode == 200) {
+          console.log("\u001b[1;32m Status code: 200 ->", res.options.uri);
+        } else if (res.statusCode == 404 || res.statusCode == 403) {
+          console.log(
+            `\u001b[1;31m Status code: ${res.statusCode} ->`,
+            res.options.uri
+          );
+        } else {
+          console.log(
+            `\u001b[1;31m Status code: ${res.statusCode} ->`,
+            res.options.uri
+          );
+        }
+        // Looking for headings in the HTML
+        const $ = res.$;
+        if ($) {
+          const headingTags = $("h2");
+          headingTags.each(async function (index, element) {
+            const text = $(element).text().trim();
+            if (text) {
+              // const dashedHeading = text.replace(/\s+/g, "-"); // Replace all spaces (including tabs) with dashes
+              const cleanedHeading = text
+                .replace(/'/g, "") // Remove all apostrophes
+                .replace(/,/g, "") // Remove commas
+                .replace(/\s+/g, "-"); // Replace all whitespace with dashes
+
+              console.log(`H2 #${index + 1}:`, text);
+              console.log(`H2 #${index + 1}:`, cleanedHeading);
+              csvWriteHeadings.push({
+                normalHeading: text,
+                cleanedHeading: cleanedHeading,
+                index: index + 1,
+              });
+            }
+          });
+          console.log("-------------------------------------------");
+          response.status(200).send(JSON.stringify(csvWriteHeadings));
+          csvWriteHeadings = [];
+          done();
+        } else {
+          console.log("error -> $");
+          done();
+        }
+      }
+    },
+  });
+});
+
 module.exports = {
   CSVCrawlLink,
+  CSVH2CrawlLink,
+  CSVH2CrawlLinkURL,
   // upload,
 };

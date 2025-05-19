@@ -27,6 +27,42 @@ export const crawlLink = createAsyncThunk(
   }
 );
 
+// crawl headings csv file
+export const crawlLinkHeadingsCSV = createAsyncThunk(
+  "links/crawl2",
+  async (linksData, thunkAPI) => {
+    try {
+      return await linksService.crawlSiteHeadingsCSV(linksData);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// crawl headings url
+export const crawlLinkHeadingsURL = createAsyncThunk(
+  "links/crawl3",
+  async (linksData, thunkAPI) => {
+    try {
+      return await linksService.crawlSiteHeadingsURL(linksData);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // crawl gsc links
 // export const gscCrawlLink = createAsyncThunk(
 //   "links/gsccrawl",
@@ -134,6 +170,36 @@ export const linksSlice = createSlice({
         state.links.push(action.payload);
       })
       .addCase(crawlLink.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // 
+      .addCase(crawlLinkHeadingsCSV.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(crawlLinkHeadingsCSV.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        // console.log(state);
+        state.links.push(action.payload);
+      })
+      .addCase(crawlLinkHeadingsCSV.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+       // 
+       .addCase(crawlLinkHeadingsURL.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(crawlLinkHeadingsURL.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        // console.log(state);
+        state.links.push(action.payload);
+      })
+      .addCase(crawlLinkHeadingsURL.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
